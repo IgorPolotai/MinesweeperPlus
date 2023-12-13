@@ -91,45 +91,38 @@ class CoveredTile extends Tile {
     }
 
     revealAdjacent() {
-        //LOGIC
+        if (!this.parent) {return;}
+    
+        const directions = [
+            [-1, -1], [-1, 0], [-1, 1],
+            [0, -1],           [0, 1],
+            [1, -1],  [1, 0],  [1, 1]
+        ];
+    
+        // Reveal this tile if it is empty
+        this.parent.removeChild(this);
+        CoveredTile.numUncovered++;
+        CoveredTile.coveredBoard[this.yIndex][this.xIndex] = null;
+    
+        for (const [rowOffset, colOffset] of directions) {
+            const newRow = this.yIndex + rowOffset;
+            const newCol = this.xIndex + colOffset;
+    
+            if (newRow >= 0 && newRow < CoveredTile.board[0].length &&
+                newCol >= 0 && newCol < CoveredTile.board.length) 
+                {
 
-        //If empty, call revealAdjacent on all surrounding tiles
-        //If number, don't
-        //Remove and set current to null
-
-        // Reveal this tile
-        
-        //console.log("adj called: " + CoveredTile.board[this.yIndex][this.xIndex] != "0");
-
-        if (CoveredTile.board[this.yIndex][this.xIndex] != "0" && this != null) {
-            console.log("got here?" + this != null);
-            this.parent.removeChild(this);
-            CoveredTile.numUncovered++;
-        }
-        else {
-            const directions = 
-            [[-1, -1], [-1, 0], [-1, 1], 
-            [0, -1],           [0, 1], 
-            [1, -1],  [1, 0],  [1, 1]];
-
-            for (const [rowOffset, colOffset] of directions) {
-                 const newRow = this.yIndex + rowOffset;
-                 const newCol = this.xIndex + colOffset;
-
-                if (newRow >= 0 && newRow < CoveredTile.board[0].length &&
-                    newCol >= 0 && newCol < CoveredTile.board.length) {
-                    
-                    let adjacentTile = CoveredTile.coveredBoard[newRow][newCol];
-                    console.log(adjacentTile);
-
-                    if (adjacentTile != null) {
-                        this.parent.removeChild(this);
-                        CoveredTile.numUncovered++;
-                        adjacentTile.revealAdjacent();
-                    }
+                let adjacentTile = CoveredTile.coveredBoard[newRow][newCol];
+    
+                if (adjacentTile !== null && CoveredTile.board[newRow][newCol] == "0") {
+                    console.log("try again");
+                    adjacentTile.revealAdjacent();
+                } else if (adjacentTile !== null && CoveredTile.board[newRow][newCol] != "0") {
+                    adjacentTile.parent.removeChild(adjacentTile);
+                    CoveredTile.numUncovered++;
+                    CoveredTile.coveredBoard[newRow][newCol] = null;
                 }
             }
         }
-    }
+    }    
 }
-

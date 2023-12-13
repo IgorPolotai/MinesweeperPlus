@@ -25,14 +25,12 @@ let stage;
 // game variables
 let startScene;
 let gameScene,scoreLabel;
-let gameOverScene;
 
 let explosionTextures;
 let explosions = [];
 let fireballSound;
 let score = 0;
 let paused = true;
-let gameOverScoreLabel;
 
 //The 2D array that holds all the info
 let gameBoard;
@@ -195,10 +193,6 @@ function setup() {
     gameScene.visible = false;
     gameScene.interactiveChildren = true;
     stage.addChild(gameScene);
-	// #3 - Create the `gameOver` scene and make it invisible
-	gameOverScene = new PIXI.Container();
-    gameOverScene.visible = false;
-    stage.addChild(gameOverScene);
 	// #4 - Create labels for all 3 scenes
 	createLabelsAndButtons();
 	// #5 - Create ship
@@ -253,22 +247,18 @@ function createLabelsAndButtons() {
     startLabel2.y = 300;
     startScene.addChild(startLabel2);
 
-    console.log("checkpoint 1");
-
     //Creates the difficulty buttons
     //Beginner (8x8, 10), Intermediate (16x16, 40), Expert (30x16, 99), Custom (you choose)
     let startButton = new PIXI.Text("Beginner");
     startButton.style = buttonStyle;
     startButton.x = 375;
-    startButton.y = sceneHeight - 100;
+    startButton.y = sceneHeight - 160;
     startButton.interactive = true;
     startButton.buttonMode = true;
-    startButton.on("pointerup", function e() {startGame(8,8,3);}); //startGame is a function reference
+    startButton.on("pointerup", function e() {startGame(8,8,10);}); //startGame is a function reference
     startButton.on("pointerover", e => e.target.alpha = 0.7);
     startButton.on("pointerout", e => e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
-
-    console.log("checkpoint 2");
 
     startButton = new PIXI.Text("Intermediate");
     startButton.style = buttonStyle;
@@ -281,12 +271,10 @@ function createLabelsAndButtons() {
     startButton.on("pointerout", e => e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
 
-    console.log("checkpoint 3");
-
     startButton = new PIXI.Text("Expert");
     startButton.style = buttonStyle;
     startButton.x = 375;
-    startButton.y = sceneHeight - 160;
+    startButton.y = sceneHeight - 100;
     startButton.interactive = true;
     startButton.buttonMode = true;
     startButton.on("pointerup", function e() {startGame(30,16,99);}); //startGame is a function reference
@@ -310,55 +298,6 @@ function createLabelsAndButtons() {
     scoreLabel.y = 5;
     gameScene.addChild(scoreLabel);
     increaseScoreBy(0);
-
-    // lifeLabel = new PIXI.Text();
-    // lifeLabel.style = textStyle;
-    // lifeLabel.x = 5;
-    // lifeLabel.y = 26;
-    // gameScene.addChild(lifeLabel);
-    // decreaseLifeBy(0);
-
-    // 3 - set up `gameOverScene`
-    // 3A - make game over text
-    let gameOverText = new PIXI.Text("Game Over!\n   :-O");
-    gameOverScoreLabel = new PIXI.Text();
-
-    textStyle = new PIXI.TextStyle({
-	    fill: 0xFFFFFF,
-	    fontSize: 48,
-	    fontFamily: "Press Start 2P",
-	    stroke: 0xFF0000,
-	    strokeThickness: 6
-    });
-    gameOverText.style = textStyle;
-    gameOverText.x = 60;
-    gameOverText.y = sceneHeight/2 - 160;
-    gameOverScene.addChild(gameOverText);
-
-    textStyle = new PIXI.TextStyle({
-	    fill: 0xFFFFFF,
-	    fontSize: 24,
-	    fontFamily: "Press Start 2P",
-	    stroke: 0xFF0000,
-	    strokeThickness: 3,
-        fontStyle: "italic"
-    });
-    gameOverScoreLabel.style = textStyle;
-    gameOverScoreLabel.x = 80;
-    gameOverScoreLabel.y = 300;
-    gameOverScene.addChild(gameOverScoreLabel);
-
-    // 3B - make "play again?" button
-    let playAgainButton = new PIXI.Text("Play Again?");
-    playAgainButton.style = buttonStyle;
-    playAgainButton.x = 175;
-    playAgainButton.y = sceneHeight - 100;
-    playAgainButton.interactive = true;
-    playAgainButton.buttonMode = true;
-    playAgainButton.on("pointerup",function e() {startGame(8, 8, 10);}); // startGame is a function reference
-    playAgainButton.on('pointerover',e=>e.target.alpha = 0.7); // concise arrow function with no brackets
-    playAgainButton.on('pointerout',e=>e.currentTarget.alpha = 1.0); // ditto
-    gameOverScene.addChild(playAgainButton);
 }
 
 function startGame(width, height, mines){
@@ -366,7 +305,6 @@ function startGame(width, height, mines){
     GenerateMinesAndNumbers(mines);
     console.log("got to here");
     startScene.visible = false;
-    gameOverScene.visible = false;
     gameScene.visible = true;
     score = 0;
     paused = false;
@@ -404,16 +342,6 @@ function gameLoop(){
         paused = true;
     }
 	
-}
-
-function endGame() {
-    paused = true;
-    //clear out level
-
-    gameOverScoreLabel.text = `Your final score: ${score}`;
-
-    gameOverScene.visible = true;
-    gameScene.visible = false;
 }
 
 function loadSpriteSheet() {
