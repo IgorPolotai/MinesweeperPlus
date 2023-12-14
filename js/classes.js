@@ -11,8 +11,8 @@ class Tile extends PIXI.Sprite {
 }
 
 class MineTile extends Tile {
-    constructor(x, y, xIndex, yIndex) {
-        super(x, y, xIndex, yIndex, "images/MineTile.png", "m");
+    constructor(x, y, xIndex, yIndex, tileImage, tileData) {
+        super(x, y, xIndex, yIndex, tileImage, tileData);
 
         this.interactive = true;
         this.buttomMode = true;
@@ -80,7 +80,7 @@ class CoveredTile extends Tile {
     onSpriteClick() {
         if(this.parent) {
                 console.log(CoveredTile.board[this.yIndex][this.xIndex]);
-                if (CoveredTile.board[this.yIndex][this.xIndex] == "0") {
+                if (CoveredTile.board[this.yIndex][this.xIndex] == "e") {
                     this.revealAdjacent();
                 }
                 else {
@@ -114,10 +114,10 @@ class CoveredTile extends Tile {
 
                 let adjacentTile = CoveredTile.coveredBoard[newRow][newCol];
     
-                if (adjacentTile !== null && CoveredTile.board[newRow][newCol] == "0") {
+                if (adjacentTile !== null && CoveredTile.board[newRow][newCol] == "e") {
                     console.log("try again");
                     adjacentTile.revealAdjacent();
-                } else if (adjacentTile !== null && CoveredTile.board[newRow][newCol] != "0") {
+                } else if (adjacentTile !== null && CoveredTile.board[newRow][newCol] != "e") {
                     adjacentTile.parent.removeChild(adjacentTile);
                     CoveredTile.numUncovered++;
                     CoveredTile.coveredBoard[newRow][newCol] = null;
