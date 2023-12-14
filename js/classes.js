@@ -36,57 +36,92 @@ class CoveredTile extends Tile {
 
         this.interactive = true;
         this.buttomMode = true;
-        this.hasFlag = false;
-        this.hasQuestion = false;
         this.on('mousedown', this.onSpriteClick.bind(this));
         this.on('rightdown', this.placeMark.bind(this));
     }
 
     static toggleMode() {
-        switch(CoveredTile.globalMode) {
-            case "flag": CoveredTile.globalMode = "question"; break;
-            case "question": CoveredTile.globalMode = "flag"; break;
-            default: CoveredTile.globalMode = "flag"; break;
+        CoveredTile.currentFlag++;
+
+        if (CoveredTile.currentFlag >= CoveredTile.flagList.length) {
+            CoveredTile.currentFlag = 0;
         }
+
+        CoveredTile.globalMode = CoveredTile.flagList[CoveredTile.currentFlag];
         console.log("Mode is now: " + CoveredTile.globalMode);
     }
 
     placeMark() {
         if(this.parent) {
-            if (CoveredTile.globalMode === "flag") {
-                if (this.hasFlag == false) {
-                    this.hasFlag = true;
-                    this.texture = PIXI.Texture.from('images/FlagTile.png');
-                }
-                else {
-                    this.hasFlag = false;
-                    this.texture = PIXI.Texture.from('images/CoveredTile.png');
-                }
-            }
-            else if (CoveredTile.globalMode === "question") {
-                if (this.hasQuestion == false) {
-                    this.hasQuestion = true;
-                    this.texture = PIXI.Texture.from('images/QuestionTile.png');
-                }
-                else {
-                    this.hasQuestion = false;
-                    this.texture = PIXI.Texture.from('images/CoveredTile.png');
-                }
+
+            switch (CoveredTile.globalMode) {
+                case "Flag":
+                    if (this.texture == PIXI.Texture.from('images/FlagTile.png')) {
+                        this.texture = PIXI.Texture.from('images/CoveredTile.png');
+                    }
+                    else {
+                        this.texture = PIXI.Texture.from('images/FlagTile.png');
+                    }
+                break;
+                case "Double Flag":
+                    if (this.texture == PIXI.Texture.from('images/DoubleFlagTile.png')) {
+                        this.texture = PIXI.Texture.from('images/CoveredTile.png');
+                    }
+                    else {
+                        this.texture = PIXI.Texture.from('images/DoubleFlagTile.png');
+                    }
+                break;
+                case "Radioactive Flag":
+                    if (this.texture == PIXI.Texture.from('images/RadioactiveFlagTile.png')) {
+                        this.texture = PIXI.Texture.from('images/CoveredTile.png');
+                    }
+                    else {
+                        this.texture = PIXI.Texture.from('images/RadioactiveFlagTile.png');
+                    }
+                break;
+                case "Anti Flag":
+                    if (this.texture == PIXI.Texture.from('images/NegFlagTile.png')) {
+                        this.texture = PIXI.Texture.from('images/CoveredTile.png');
+                    }
+                    else {
+                        this.texture = PIXI.Texture.from('images/NegFlagTile.png');
+                    }
+                break;
+                case "Night Flag":
+                    if (this.texture == PIXI.Texture.from('images/NightFlagTile.png')) {
+                        this.texture = PIXI.Texture.from('images/CoveredTile.png');
+                    }
+                    else {
+                        this.texture = PIXI.Texture.from('images/NightFlagTile.png');
+                    }
+                break;
+                case "Question":
+                    if (this.texture == PIXI.Texture.from('images/QuestionTile.png')) {
+                        this.texture = PIXI.Texture.from('images/CoveredTile.png');
+                    }
+                    else {
+                        this.texture = PIXI.Texture.from('images/QuestionTile.png');
+                    }
+                break;
             }
         }
     }
+    
 
     //Removes the Covered Tile when it is clicked, but only in the Game Scene
     onSpriteClick() {
         if(this.parent) {
                 console.log(CoveredTile.board[this.yIndex][this.xIndex]);
-                if (CoveredTile.board[this.yIndex][this.xIndex] == "e") {
+                if (CoveredTile.board[this.yIndex][this.xIndex] == "e" &&
+                    CoveredTile.nightMode !== true) {
                     this.revealAdjacent();
                 }
                 else {
                     this.parent.removeChild(this);
                     CoveredTile.numUncovered++;
                 }
+
+            CoveredTile.firstClick++;
         }
     }
 
@@ -117,7 +152,11 @@ class CoveredTile extends Tile {
                 if (adjacentTile !== null && CoveredTile.board[newRow][newCol] == "e") {
                     console.log("try again");
                     adjacentTile.revealAdjacent();
-                } else if (adjacentTile !== null && CoveredTile.board[newRow][newCol] != "e") {
+                } else if (adjacentTile !== null && CoveredTile.board[newRow][newCol] != "e" &&
+                           CoveredTile.board[newRow][newCol] != "m" && CoveredTile.board[newRow][newCol] != "d" &&
+                           CoveredTile.board[newRow][newCol] != "r" && CoveredTile.board[newRow][newCol] != "a" &&
+                           CoveredTile.board[newRow][newCol] != "k") {
+                    console.log("removing adjacent: " + (adjacentTile == null));
                     adjacentTile.parent.removeChild(adjacentTile);
                     CoveredTile.numUncovered++;
                     CoveredTile.coveredBoard[newRow][newCol] = null;

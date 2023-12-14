@@ -41,13 +41,16 @@ let normalMineCount = 5;
 let doubleMineCount = 2;
 let radioactiveMineCount = 2;
 let antiMineCount = 2;
+let nightMineCount = 0;
 let tileCount;
-let gameMode = "custom";
+let gameMode = "double";
+let safetyClick = true;
 
 //These two arrays hold all of the tiles
 let tileList = [];
 let coveredTileList = [];
 let mineList = [];
+let savedRadioactive = [];
 
 // Disables context menu so right click can maybe work.
 document.addEventListener('contextmenu', event => event.preventDefault());
@@ -61,20 +64,27 @@ function GenerateBoard(width, height) {
     boardHeight = height;
     for (let i = 0; i < boardHeight; i++) {
         let data = [];
-        let coveredTilesData = [];
         for (let j = 0; j < boardWidth; j++) {
             data.push("e");
-            let coverTile = new CoveredTile(32 + j * 32, 32 + i * 32, j, i);
-            coveredTileList.push(coverTile);
-            gameScene.addChildAt(coverTile, 1);
-            coveredTilesData.push(coverTile);
         }
         gameBoard.push(data);
-        CoveredTile.coveredBoard.push(coveredTilesData);
     }
 
     tileCount = boardHeight * boardWidth;
     console.log(gameBoard);
+}
+
+function GenerateCovers() {
+    for (let i = 0; i < boardHeight; i++) {
+        let coveredTilesData = [];
+        for (let j = 0; j < boardWidth; j++) {
+            let coverTile = new CoveredTile(32 + j * 32, 32 + i * 32, j, i);
+            coveredTileList.push(coverTile);
+            gameScene.addChild(coverTile);
+            coveredTilesData.push(coverTile);
+        }
+        CoveredTile.coveredBoard.push(coveredTilesData);
+    }
     console.log(CoveredTile.coveredBoard);
 }
 
@@ -96,31 +106,80 @@ function GenerateMinesAndNumbers(mines) {
             mineAssortmentArray.push(0); //id 1 = double
             mineAssortmentArray.push(0); //id 2 = radioactive
             mineAssortmentArray.push(0); //id 3 = anti
+            mineAssortmentArray.push(0); //id 4 = night
+            CoveredTile.flagList.push("Flag");
+            CoveredTile.flagList.push("Question");
             break;
         case "double": 
             mineAssortmentArray.push(mines/2); //id 0 = normal
             mineAssortmentArray.push(mines/2); //id 1 = double
             mineAssortmentArray.push(0); //id 2 = radioactive
             mineAssortmentArray.push(0); //id 3 = anti
+            mineAssortmentArray.push(0); //id 4 = night
+            CoveredTile.flagList.push("Flag");
+            CoveredTile.flagList.push("Double Flag");
+            CoveredTile.flagList.push("Question");
             break;
         case "radioactive": 
             mineAssortmentArray.push(0); //id 0 = normal
             mineAssortmentArray.push(0); //id 1 = double
             mineAssortmentArray.push(mines); //id 2 = radioactive
             mineAssortmentArray.push(0); //id 3 = anti
+            mineAssortmentArray.push(0); //id 4 = night
+            CoveredTile.flagList.push("Radioactive Flag");
+            CoveredTile.flagList.push("Question");
             break;
         case "anti": 
             mineAssortmentArray.push(mines/2); //id 0 = normal
             mineAssortmentArray.push(0); //id 1 = double
             mineAssortmentArray.push(0); //id 2 = radioactive
             mineAssortmentArray.push(mines/2); //id 3 = anti
+            mineAssortmentArray.push(0); //id 4 = night
+            CoveredTile.flagList.push("Flag");
+            CoveredTile.flagList.push("Anti Flag");
+            CoveredTile.flagList.push("Question");
+            break;
+        case "night": 
+            mineAssortmentArray.push(mines/2); //id 0 = normal
+            mineAssortmentArray.push(0); //id 1 = double
+            mineAssortmentArray.push(0); //id 2 = radioactive
+            mineAssortmentArray.push(0); //id 3 = anti
+            mineAssortmentArray.push(mines/2); //id 4 = night
+            CoveredTile.flagList.push("Flag");
+            CoveredTile.flagList.push("Night Flag");
+            CoveredTile.flagList.push("Question");
             break;
         case "custom":
             mineAssortmentArray.push(normalMineCount); //id 0 = normal
             mineAssortmentArray.push(doubleMineCount); //id 1 = double
             mineAssortmentArray.push(radioactiveMineCount); //id 2 = radioactive
             mineAssortmentArray.push(antiMineCount); //id 3 = anti
+            mineAssortmentArray.push(nightMineCount); //id 4 = night
+
+            if (normalMineCount > 0) {
+                CoveredTile.flagList.push("Flag");
+            }
+            if (doubleMineCount > 0) {
+                CoveredTile.flagList.push("Double Flag");
+            }
+            if (radioactiveMineCount > 0) {
+                CoveredTile.flagList.push("Radioactive Flag");
+            }
+            if (antiMineCount > 0) {
+                CoveredTile.flagList.push("Anti Flag");
+            }
+            if (nightMineCount > 0) {
+                CoveredTile.flagList.push("Night Flag");
+            }
+
+            CoveredTile.flagList.push("Question");
             break;
+    }
+
+    CoveredTile.globalMode = CoveredTile.flagList[0];
+
+    if (mineAssortmentArray[4] > 0) {
+        CoveredTile.nightMode = true;
     }
 
     for (let id = 0; id < mineAssortmentArray.length; id++) {
@@ -130,6 +189,7 @@ function GenerateMinesAndNumbers(mines) {
             case 1: mineName = "d"; break;
             case 2: mineName = "r"; break;
             case 3: mineName = "a"; break;
+            case 4: mineName = "k"; break;
         }
 
         for (let i = 0; i < mineAssortmentArray[id]; i++) {
@@ -144,7 +204,8 @@ function GenerateMinesAndNumbers(mines) {
             while(gameBoard[mineY][mineX] == "m" ||
                   gameBoard[mineY][mineX] == "d" ||
                   gameBoard[mineY][mineX] == "r" ||
-                  gameBoard[mineY][mineX] == "a") {
+                  gameBoard[mineY][mineX] == "a" ||
+                  gameBoard[mineY][mineX] == "k") {
                 mineX = Math.floor(Math.random() * boardWidth);
                 mineY = Math.floor(Math.random() * boardHeight);
             }
@@ -153,9 +214,20 @@ function GenerateMinesAndNumbers(mines) {
             gameBoard[mineY][mineX] = mineName;
     
             // Then, add +1, +2, or -1 to all eight tiles around it, except null and other mines
-            const directions = [[-1,-1], [-1, 0], [-1, 1],
+            
+            let directions = [];
+
+            if (id == 4) {
+                directions = [[-2,1],   [-1, 2],  [1, 2], 
+                              [2, 1],             [-2, -1],
+                              [-1,-2],  [1, -2],  [2, -1]];
+            }
+            else {
+                directions = [[-1,-1], [-1, 0], [-1, 1],
                                 [0,-1],           [0, 1],
                                 [1,-1],  [1, 0],  [1, 1]];
+            }
+
             for (const[rowOffset, colOffset] of directions) {
                 let newRow = mineX + rowOffset;
                 let newCol = mineY + colOffset;
@@ -165,7 +237,8 @@ function GenerateMinesAndNumbers(mines) {
                     if (gameBoard[newCol][newRow] !== "m" &&
                         gameBoard[newCol][newRow] !== "d" &&
                         gameBoard[newCol][newRow] !== "r" &&
-                        gameBoard[newCol][newRow] !== "a"){
+                        gameBoard[newCol][newRow] !== "a" &&
+                        gameBoard[newCol][newRow] !== "k"){
                         
                         if (gameBoard[newCol][newRow] == "e") {gameBoard[newCol][newRow] = 0;}
     
@@ -178,6 +251,7 @@ function GenerateMinesAndNumbers(mines) {
                                 radioactiveArray.push(savedPosition);
                                 break;
                             case "a": gameBoard[newCol][newRow]--; break;
+                            case "k": gameBoard[newCol][newRow]++; break;
                         }
                     } 
                 }
@@ -187,6 +261,7 @@ function GenerateMinesAndNumbers(mines) {
                 console.log(radioactiveArray.length);
                 let choice = Math.floor(Math.random() * radioactiveArray.length);
                 gameBoard[radioactiveArray[choice].col][radioactiveArray[choice].row]++;
+                savedRadioactive.push[radioactiveArray[choice]];
             }
         }
     
@@ -223,6 +298,14 @@ function GenerateMinesAndNumbers(mines) {
                     case 14: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FourteenTile.png", "14"); break;
                     case 15: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FifteenTile.png", "15"); break;
                     case 16: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SixteenTile.png", "16"); break;
+                    case 17: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SeventeenTile.png", "17"); break;
+                    case 18: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/EighteenTile.png", "18"); break;
+                    case 19: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NineteenTile.png", "19"); break;
+                    case 20: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyTile.png", "20"); break;
+                    case 21: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyOneTile.png", "21"); break;
+                    case 22: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyTwoTile.png", "22"); break;
+                    case 23: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyThreeTile.png", "23"); break;
+                    case 24: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyFourTile.png", "24"); break;
                     case "m": //mine
                         tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/MineTile.png", "m"); 
                         mineList.push(tile);
@@ -237,6 +320,10 @@ function GenerateMinesAndNumbers(mines) {
                         break;
                     case "a": //anti mine
                         tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/AntiMineTile.png", "a"); 
+                        mineList.push(tile);
+                        break;
+                    case "k": //night mine
+                        tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/NightMineTile.png", "k"); 
                         mineList.push(tile);
                         break;
                 }
@@ -262,11 +349,229 @@ function ClearBoard() {
     explosions = [];
 
     mineList = [];
+    savedRadioactive = [];
 
-    CoveredTile.globalMode = "flag";
+    safetyClick = true;
+    CoveredTile.globalMode = "Temp";
     CoveredTile.numUncovered = 0;
     CoveredTile.board = [];
     CoveredTile.coveredBoard = [];
+    CoveredTile.flagList = [];
+    CoveredTile.currentFlag = 0;
+    CoveredTile.nightMode = false;
+    CoveredTile.firstClick = 0;
+}
+
+function SafetyMine(mine) {
+    console.log("safety mine activated");
+    safetyClick = false;
+
+    //logic
+    //remove old numbers
+    //move mine
+    //add new numbers
+    //regenerate board
+
+    let directions = [];
+
+    //determine what type of mine it is
+    if (mine.tileData == "k") {
+        directions = [[-2,1],   [-1, 2],  [1, 2], 
+                      [2, 1],             [-2, -1],
+                      [-1,-2],  [1, -2],  [2, -1]];
+    }
+    else {
+        directions = [[-1,-1], [-1, 0], [-1, 1],
+                        [0,-1],           [0, 1],
+                        [1,-1],  [1, 0],  [1, 1]];
+    }
+
+    //Remove old numbers
+    for (const[rowOffset, colOffset] of directions) {
+        let newRow = mine.xIndex + rowOffset;
+        let newCol = mine.yIndex + colOffset;
+
+        if (newRow >= 0 && newRow < gameBoard[0].length &&
+            newCol >= 0 && newCol < gameBoard.length) {
+            if (gameBoard[newCol][newRow] !== "m" &&
+                gameBoard[newCol][newRow] !== "d" &&
+                gameBoard[newCol][newRow] !== "r" &&
+                gameBoard[newCol][newRow] !== "a" &&
+                gameBoard[newCol][newRow] !== "k"){
+                
+                if (gameBoard[newCol][newRow] == "e") {gameBoard[newCol][newRow] = 0;}
+
+                switch(mine.tileData) {
+                    case "m": gameBoard[newCol][newRow]--; break;
+                    case "d": gameBoard[newCol][newRow] -= 2; break;
+                    case "r": gameBoard[newCol][newRow]--; 
+                        for (let i = 0; i < savedRadioactive.length; i++) {
+                            if (savedRadioactive[i].col == newCol &&
+                                savedRadioactive[i].row == newRow) {
+                                    gameBoard[newCol][newRow]--; 
+                                }
+                        }
+                        break;
+                    case "a": gameBoard[newCol][newRow]++; break;
+                    case "k": gameBoard[newCol][newRow]--; break;
+                }
+
+                //Make sure 0 tiles and empty tiles are displayed correctly
+                if (gameBoard[newCol][newRow] == "0" && mine.tileData != "a") {
+                    gameBoard[newCol][newRow] = "e";
+                }
+            } 
+        }
+    }
+
+    //move mine to a new location
+    let mineX = Math.floor(Math.random() * boardWidth);
+    let mineY = Math.floor(Math.random() * boardHeight);
+    let radioactiveArray = [];    
+
+    while(gameBoard[mineY][mineX] == "m" ||
+          gameBoard[mineY][mineX] == "d" ||
+          gameBoard[mineY][mineX] == "r" ||
+          gameBoard[mineY][mineX] == "a" ||
+          gameBoard[mineY][mineX] == "k") {
+               mineX = Math.floor(Math.random() * boardWidth);
+               mineY = Math.floor(Math.random() * boardHeight);
+        }
+    
+    // After a valid square is selected, change it to the mine name
+    // Remove old mine
+    gameBoard[mineY][mineX] = mine.tileData;
+    gameBoard[mine.yIndex][mine.xIndex] = "e";
+    
+    // Then, add +1, +2, or -1 to all eight tiles around it, except null and other mines
+    for (const[rowOffset, colOffset] of directions) {
+        let newRow = mineX + rowOffset;
+        let newCol = mineY + colOffset;
+    
+            if (newRow >= 0 && newRow < gameBoard[0].length &&
+                newCol >= 0 && newCol < gameBoard.length) {
+                if (gameBoard[newCol][newRow] !== "m" &&
+                    gameBoard[newCol][newRow] !== "d" &&
+                    gameBoard[newCol][newRow] !== "r" &&
+                    gameBoard[newCol][newRow] !== "a" &&
+                    gameBoard[newCol][newRow] !== "k"){
+                        
+                    if (gameBoard[newCol][newRow] == "e") {gameBoard[newCol][newRow] = 0;}
+    
+                    switch(mine.tileData) {
+                        case "m": gameBoard[newCol][newRow]++; break;
+                        case "d": gameBoard[newCol][newRow] += 2; break;
+                        case "r": 
+                                gameBoard[newCol][newRow]++; 
+                                const savedPosition = {col:newCol, row:newRow};
+                                radioactiveArray.push(savedPosition);
+                                break;
+                        case "a": gameBoard[newCol][newRow]--; break;
+                        case "k": gameBoard[newCol][newRow]++; break;
+                        }
+                    } 
+                }
+            }
+
+            if (mine.tileData == "r") {
+                console.log(radioactiveArray.length);
+                let choice = Math.floor(Math.random() * radioactiveArray.length);
+                gameBoard[radioactiveArray[choice].col][radioactiveArray[choice].row]++;
+            }
+    
+    //Remove everything from the board
+
+    let savedX = mine.xIndex;
+    let savedY = mine.yIndex;
+
+    coveredTileList.forEach(c=>gameScene.removeChild(c));
+    coveredTileList = [];
+
+    mineList.forEach(e=>gameScene.removeChild(e));
+    mineList = [];
+
+    tileList.forEach(t=>gameScene.removeChild(t));
+    tileList = [];
+
+    //Remake the board
+    for (let i = 0; i < boardHeight; i++) {
+        for (let j = 0; j < boardWidth; j++) {
+            let data = gameBoard[i][j];
+            let tile = 0;
+
+            switch(data) {
+                case "e": tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ZeroTile.png", "e"); break;
+                case -8: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegEightTile.png", "-8"); break;
+                case -7: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegSevenTile.png", "-7"); break;
+                case -6: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegSixTile.png", "-6"); break;
+                case -5: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegFiveTile.png", "-5"); break;
+                case -4: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegFourTile.png", "-4"); break;
+                case -3: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegThreeTile.png", "-3"); break;
+                case -2: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegTwoTile.png", "-2"); break;
+                case -1: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegOneTile.png", "-1"); break;
+                case 0: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ZeroNumTile.png", "0"); break;
+                case 1: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/OneTile.png", "1"); break;
+                case 2: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwoTile.png", "2"); break;
+                case 3: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ThreeTile.png", "3"); break;
+                case 4: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FourTile.png", "4"); break;
+                case 5: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FiveTile.png", "5"); break;
+                case 6: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SixTile.png", "6"); break;
+                case 7: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SevenTile.png", "7"); break;
+                case 8: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/EightTile.png", "8"); break;
+                case 9: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NineTile.png", "9"); break;
+                case 10: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TenTile.png", "10"); break;
+                case 11: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ElevenTile.png", "11"); break;
+                case 12: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwelveTile.png", "12"); break;
+                case 13: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ThirteenTile.png", "13"); break;
+                case 14: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FourteenTile.png", "14"); break;
+                case 15: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FifteenTile.png", "15"); break;
+                case 16: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SixteenTile.png", "16"); break;
+                case 17: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SeventeenTile.png", "17"); break;
+                case 18: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/EighteenTile.png", "18"); break;
+                case 19: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NineteenTile.png", "19"); break;
+                case 20: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyTile.png", "20"); break;
+                case 21: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyOneTile.png", "21"); break;
+                case 22: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyTwoTile.png", "22"); break;
+                case 23: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyThreeTile.png", "23"); break;
+                case 24: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyFourTile.png", "24"); break;
+                case "m": //mine
+                    tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/MineTile.png", "m"); 
+                    mineList.push(tile);
+                    break;
+                case "d": //double mine
+                    tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/DoubleMineTile.png", "d"); 
+                    mineList.push(tile);
+                    break;
+                case "r": //radioactive mine
+                    tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/RadioactiveTile.png", "r"); 
+                    mineList.push(tile);
+                    break;
+                case "a": //anti mine
+                    tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/AntiMineTile.png", "a"); 
+                    mineList.push(tile);
+                    break;
+                case "k": //night mine
+                    tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/NightMineTile.png", "k"); 
+                    mineList.push(tile);
+                    break;
+            }
+
+            tileList.push(tile);
+            gameScene.addChild(tile);
+        }
+    }
+
+    //Regenerate the covers
+    CoveredTile.coveredBoard = [];
+    GenerateCovers();
+
+    //Call the reveal adjacent tile on the now empty mine square
+    for (let i = 0; i < coveredTileList.length; i++) {
+        if(coveredTileList[i].yIndex == savedY &&
+           coveredTileList[i].xIndex == savedX) {
+            coveredTileList[i].revealAdjacent();
+        }
+    }
 }
 
 function end(result) {
@@ -400,23 +705,18 @@ function createLabelsAndButtons() {
     scoreLabel.x = 5;
     scoreLabel.y = 5;
     gameScene.addChild(scoreLabel);
-    increaseScoreBy(0);
 }
 
 function startGame(width, height, mines){
     GenerateBoard(width,height);
     GenerateMinesAndNumbers(mines);
+    GenerateCovers();
     console.log("got to here");
     startScene.visible = false;
     gameScene.visible = true;
     score = 0;
     paused = false;
     scoreLabel.text = `Press Space To Switch. Current Mode: ${CoveredTile.globalMode} Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
-}
-
-function increaseScoreBy(value) {
-    score += value;
-    //scoreLabel.text = `Score: ${score}`;
 }
 
 function gameLoop(){
@@ -426,7 +726,7 @@ function gameLoop(){
 
     //Checks if you lose
 	for (let i = 0; i < mineList.length; i++) {
-        if(mineList[i].clicked == true) {
+        if(mineList[i].clicked == true && safetyClick == false) {
             console.log("you went kaboom");
             createExplosion(mineList[i].x + 16, mineList[i].y + 16, 64, 64);
             //fireballSound.play();
@@ -435,6 +735,14 @@ function gameLoop(){
             paused = true;
             scoreLabel.text = `You Lose. Press R To Restart`;
         }
+        else if (mineList[i].clicked == true && safetyClick == true) {
+            mineList[i].clicked = false;
+            SafetyMine(mineList[i]);
+        }
+    }
+
+    if (CoveredTile.firstClick >= 2) {
+        safetyClick = false;
     }
 
     //Checks if you win
