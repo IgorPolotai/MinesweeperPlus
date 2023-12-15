@@ -125,6 +125,12 @@ class CoveredTile extends Tile {
                         CoveredTile.dig.play();
                     }
 
+                    //Makes sure that if you remove a tile with a flag on it, you get it back
+                    if (this.texture != PIXI.Texture.from('images/CoveredTile.png') &&
+                        this.texture != PIXI.Texture.from('images/NightCoveredTile.png')) {
+                            CoveredTile.flagsLeft++;
+                        }
+                    
                     this.parent.removeChild(this);
                     CoveredTile.numUncovered++;
                 }
@@ -166,6 +172,12 @@ class CoveredTile extends Tile {
             [1, -1],  [1, 0],  [1, 1]
         ];
     
+        //Makes sure that if you remove a tile with a flag on it, you get it back
+        if (this.texture != PIXI.Texture.from('images/CoveredTile.png') &&
+            this.texture != PIXI.Texture.from('images/NightCoveredTile.png')) {
+                CoveredTile.flagsLeft++;
+        }
+
         // Reveal this tile if it is empty
         this.parent.removeChild(this);
         CoveredTile.numUncovered++;
@@ -188,6 +200,12 @@ class CoveredTile extends Tile {
                            CoveredTile.board[newRow][newCol] != "r" && CoveredTile.board[newRow][newCol] != "a" &&
                            CoveredTile.board[newRow][newCol] != "k") {
                     console.log("removing adjacent: " + (adjacentTile.parent == null));
+                    
+                    //Makes sure that if you remove a tile with a flag on it, you get it back
+                    if (adjacentTile.texture != PIXI.Texture.from('images/CoveredTile.png') &&
+                        adjacentTile.texture != PIXI.Texture.from('images/NightCoveredTile.png')) {
+                            CoveredTile.flagsLeft++;
+                    }
                     adjacentTile.parent.removeChild(adjacentTile);
                     CoveredTile.numUncovered++;
                     CoveredTile.coveredBoard[newRow][newCol] = null;

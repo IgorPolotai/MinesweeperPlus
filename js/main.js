@@ -25,7 +25,7 @@ let stage;
 
 // game variables
 let startScene,variantScene,customScene,rulesScene;
-let gameScene,scoreLabel,flagLabel,timeLabel, face;
+let gameScene,scoreLabel,flagLabel,timeLabel,face,variantLabel, variantSubLabel;
 
 let explosionTextures;
 let explosions = [];
@@ -43,7 +43,7 @@ let radioactiveMineCount = 2;
 let antiMineCount = 2;
 let nightMineCount = 1;
 let tileCount;
-let gameMode = "normal";
+let gameMode = "Normal";
 let safetyClick = true;
 let intervalId = 0;
 
@@ -226,7 +226,7 @@ function GenerateMinesAndNumbers(mines) {
     let mineName = "";
 
     switch(gameMode) {
-        case "normal": 
+        case "Normal": 
             mineAssortmentArray.push(mines); //id 0 = normal
             mineAssortmentArray.push(0); //id 1 = double
             mineAssortmentArray.push(0); //id 2 = radioactive
@@ -235,7 +235,7 @@ function GenerateMinesAndNumbers(mines) {
             CoveredTile.flagList.push("Flag");
             CoveredTile.flagList.push("Question");
             break;
-        case "double": 
+        case "Double": 
             mineAssortmentArray.push(Math.floor(mines/2)); //id 0 = normal
             mineAssortmentArray.push(Math.floor(mines/2)); //id 1 = double
             mineAssortmentArray.push(0); //id 2 = radioactive
@@ -245,16 +245,17 @@ function GenerateMinesAndNumbers(mines) {
             CoveredTile.flagList.push("Double Flag");
             CoveredTile.flagList.push("Question");
             break;
-        case "radioactive": 
+        case "Radioactive": 
             mineAssortmentArray.push(Math.floor(mines/2)); //id 0 = normal
             mineAssortmentArray.push(0); //id 1 = double
             mineAssortmentArray.push(Math.floor(mines/2)); //id 2 = radioactive
             mineAssortmentArray.push(0); //id 3 = anti
             mineAssortmentArray.push(0); //id 4 = night
+            CoveredTile.flagList.push("Flag");
             CoveredTile.flagList.push("Radioactive Flag");
             CoveredTile.flagList.push("Question");
             break;
-        case "anti": 
+        case "Anti": 
             mineAssortmentArray.push(Math.floor(mines/2)); //id 0 = normal
             mineAssortmentArray.push(0); //id 1 = double
             mineAssortmentArray.push(0); //id 2 = radioactive
@@ -264,7 +265,7 @@ function GenerateMinesAndNumbers(mines) {
             CoveredTile.flagList.push("Anti Flag");
             CoveredTile.flagList.push("Question");
             break;
-        case "night": 
+        case "Night": 
             mineAssortmentArray.push(Math.floor(mines/2)); //id 0 = normal
             mineAssortmentArray.push(0); //id 1 = double
             mineAssortmentArray.push(0); //id 2 = radioactive
@@ -274,7 +275,7 @@ function GenerateMinesAndNumbers(mines) {
             CoveredTile.flagList.push("Night Flag");
             CoveredTile.flagList.push("Question");
             break;
-        case "custom":
+        case "Custom":
             mineAssortmentArray.push(normalMineCount); //id 0 = normal
             mineAssortmentArray.push(doubleMineCount); //id 1 = double
             mineAssortmentArray.push(radioactiveMineCount); //id 2 = radioactive
@@ -719,13 +720,16 @@ function SafetyMine(mine) {
 }
 
 document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
+    if (e.code === 'Space' && paused == false) {
         CoveredTile.toggleMode();
         scoreLabel.text = `Press Space To Switch Flags. Current Mode: ${CoveredTile.globalMode}. Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
     }
 
     if (e.key === 'r') {
         gameScene.visible = false;
+        variantScene.visible = false;
+        customScene.visible = false;
+        rulesScene.visible = false;
         startScene.visible = true;
     }
 })
@@ -750,11 +754,11 @@ function setup() {
 
     customScene = new PIXI.Container();
     customScene.visible = false;
-    customScene.addChild(customScene);
+    stage.addChild(customScene);
 
     rulesScene = new PIXI.Container();
     rulesScene.visible = false;
-    rulesScene.addChild(rulesScene);
+    stage.addChild(rulesScene);
 	// #4 - Create labels for all scenes
 	createLabelsAndButtons();
 	// #5 - Create ship
@@ -785,33 +789,79 @@ function createLabelsAndButtons() {
         fontFamily: "Pixelify Sans"
     });
 
-    //set up startScene and make start label
-    let startLabel1 = new PIXI.Text("Minesweeper+");
-    startLabel1.style = new PIXI.TextStyle({
+    let titleStyle = new PIXI.TextStyle({
         fill: 0x000000,
         fontSize: 60,
         fontFamily: "Pixelify Sans",
         stroke: 0xFF0000,
         strokeThickness: 6
     });
-    startLabel1.anchor.set(0.5);
-    startLabel1.x = sceneWidth / 2;
-    startLabel1.y = 120;
-    startScene.addChild(startLabel1);
 
-    //make middle start label
-    let startLabel2 = new PIXI.Text("Don't Blow Up");
-    startLabel2.style = new PIXI.TextStyle({
+    let subTitleStyle = new PIXI.TextStyle({
         fill: 0x00000,
         fontSize: 44,
         fontFamily: "Pixelify Sans",
         stroke: 0xFF0000,
         strokeThickness: 6
     });
+
+    //set up startScene and make start label
+    let titleLabel = new PIXI.Text("Minesweeper+");
+    titleLabel.style = titleStyle;
+    titleLabel.anchor.set(0.5);
+    titleLabel.x = sceneWidth / 2;
+    titleLabel.y = 120;
+    startScene.addChild(titleLabel);
+
+    let titleLabel2 = new PIXI.Text("Minesweeper+");
+    titleLabel2.style = titleStyle;
+    titleLabel2.anchor.set(0.5);
+    titleLabel2.x = sceneWidth / 2;
+    titleLabel2.y = 120;
+    variantScene.addChild(titleLabel2);
+
+    let titleLabel3 = new PIXI.Text("Minesweeper+");
+    titleLabel3.style = titleStyle;
+    titleLabel3.anchor.set(0.5);
+    titleLabel3.x = sceneWidth / 2;
+    titleLabel3.y = 120;
+    customScene.addChild(titleLabel3);
+
+    let titleLabel4 = new PIXI.Text("Minesweeper+");
+    titleLabel4.style = titleStyle;
+    titleLabel4.anchor.set(0.5);
+    titleLabel4.x = sceneWidth / 2;
+    titleLabel4.y = 120;
+    rulesScene.addChild(titleLabel4);
+
+    //make middle start label
+    let startLabel2 = new PIXI.Text("Don't Blow Up");
+    startLabel2.style = subTitleStyle;
     startLabel2.anchor.set(0.5);
     startLabel2.x = sceneWidth / 2;
     startLabel2.y = 180;
     startScene.addChild(startLabel2);
+
+    let variantSubLabel = new PIXI.Text("Current Variant: " + gameMode);
+    variantSubLabel.style = subTitleStyle;
+    variantSubLabel.anchor.set(0.5);
+    variantSubLabel.x = sceneWidth / 2;
+    variantSubLabel.y = 180;
+    variantScene.addChild(variantSubLabel);
+
+    startLabel2 = new PIXI.Text("Custom Game");
+    startLabel2.style = subTitleStyle;
+    startLabel2.anchor.set(0.5);
+    startLabel2.x = sceneWidth / 2;
+    startLabel2.y = 180;
+    customScene.addChild(startLabel2);
+    
+    startLabel2 = new PIXI.Text("Rules");
+    startLabel2.style = subTitleStyle;
+    startLabel2.anchor.set(0.5);
+    startLabel2.x = sceneWidth / 2;
+    startLabel2.y = 180;
+    rulesScene.addChild(startLabel2);
 
     //Creates the difficulty buttons
     //Beginner (8x8, 10), Intermediate (16x16, 40), Expert (30x16, 99), Custom (you choose)
@@ -858,22 +908,22 @@ function createLabelsAndButtons() {
     startButton.y = sceneHeight / 2 + 90;
     startButton.interactive = true;
     startButton.buttonMode = true;
-    startButton.on("pointerup", function e() {startGame(30,16,99);}); //startGame is a function reference
+    startButton.on("pointerup", function e() {customScene.visible = true; startScene.visible = false;});
     startButton.on("pointerover", e=>e.target.alpha = 0.5);
     startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
 
-    startButton = new PIXI.Text("Variants");
-    startButton.anchor.set(0.5);
-    startButton.style = buttonStyle;
-    startButton.x = sceneWidth / 2;
-    startButton.y = sceneHeight / 2 + 120;
-    startButton.interactive = true;
-    startButton.buttonMode = true;
-    startButton.on("pointerup", function e() {startGame(30,16,99);}); //startGame is a function reference
-    startButton.on("pointerover", e=>e.target.alpha = 0.5);
-    startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
-    startScene.addChild(startButton);
+    let variantLabel = new PIXI.Text("Variants: " + gameMode);
+    variantLabel.anchor.set(0.5);
+    variantLabel.style = buttonStyle;
+    variantLabel.x = sceneWidth / 2;
+    variantLabel.y = sceneHeight / 2 + 120;
+    variantLabel.interactive = true;
+    variantLabel.buttonMode = true;
+    variantLabel.on("pointerup", function e() {variantScene.visible = true; startScene.visible = false;});
+    variantLabel.on("pointerover", e=>e.target.alpha = 0.5);
+    variantLabel.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    startScene.addChild(variantLabel);
 
     startButton = new PIXI.Text("Rules");
     startButton.anchor.set(0.5);
@@ -882,10 +932,151 @@ function createLabelsAndButtons() {
     startButton.y = sceneHeight / 2 + 150;
     startButton.interactive = true;
     startButton.buttonMode = true;
-    startButton.on("pointerup", function e() {startGame(30,16,99);}); //startGame is a function reference
+    startButton.on("pointerup", function e() {rulesScene.visible = true; startScene.visible = false;});
     startButton.on("pointerover", e=>e.target.alpha = 0.5);
     startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
+
+    //set up variantScene
+
+    let varTextStyle = new PIXI.TextStyle({
+        fill: 0x00000,
+        fontSize: 24,
+        fontFamily: "Pixelify Sans"
+    });
+
+    let varSelect = new PIXI.Text("Normal");
+    varSelect.anchor.set(0.5);
+    varSelect.style = buttonStyle;
+    varSelect.x = sceneWidth / 2;
+    varSelect.y = sceneHeight / 2 - 60;
+    varSelect.interactive = true;
+    varSelect.buttonMode = true;
+    varSelect.on("pointerup", function e() {
+        gameMode = "Normal";
+        variantLabel.text = "Variant: " + gameMode;
+        variantSubLabel.text = "Current Variant: " + gameMode;
+    });
+    varSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    varSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    variantScene.addChild(varSelect);
+
+    let subVarText = new PIXI.Text("\"For your classic Minesweeper experience\"");
+    subVarText.anchor.set(0.5);
+    subVarText.style = varTextStyle;
+    subVarText.x = sceneWidth / 2;
+    subVarText.y = sceneHeight / 2 - 30;
+    variantScene.addChild(subVarText);
+
+    varSelect = new PIXI.Text("Double");
+    varSelect.anchor.set(0.5);
+    varSelect.style = buttonStyle;
+    varSelect.x = sceneWidth / 2;
+    varSelect.y = sceneHeight / 2;
+    varSelect.interactive = true;
+    varSelect.buttonMode = true;
+    varSelect.on("pointerup", function e() {
+        gameMode = "Double";
+        variantLabel.text = "Variant: " + gameMode;
+        variantSubLabel.text = "Current Variant: " + gameMode;
+    });
+    varSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    varSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    variantScene.addChild(varSelect);
+
+    subVarText = new PIXI.Text("\"Double the trouble, twice the fun.\"");
+    subVarText.anchor.set(0.5);
+    subVarText.style = varTextStyle;
+    subVarText.x = sceneWidth / 2;
+    subVarText.y = sceneHeight / 2 + 30;
+    variantScene.addChild(subVarText);
+
+    varSelect = new PIXI.Text("Radioactive");
+    varSelect.anchor.set(0.5);
+    varSelect.style = buttonStyle;
+    varSelect.x = sceneWidth / 2;
+    varSelect.y = sceneHeight / 2 + 60;
+    varSelect.interactive = true;
+    varSelect.buttonMode = true;
+    varSelect.on("pointerup", function e() {
+        gameMode = "Radioactive";
+        variantLabel.text = "Variant: " + gameMode;
+        variantSubLabel.text = "Current Variant: " + gameMode;
+    });
+    varSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    varSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    variantScene.addChild(varSelect);
+
+    subVarText = new PIXI.Text("\"The radiation is causing number mutation.\"");
+    subVarText.anchor.set(0.5);
+    subVarText.style = varTextStyle;
+    subVarText.x = sceneWidth / 2;
+    subVarText.y = sceneHeight / 2 + 90;
+    variantScene.addChild(subVarText);
+
+    varSelect = new PIXI.Text("Anti");
+    varSelect.anchor.set(0.5);
+    varSelect.style = buttonStyle;
+    varSelect.x = sceneWidth / 2;
+    varSelect.y = sceneHeight / 2 + 120;
+    varSelect.interactive = true;
+    varSelect.buttonMode = true;
+    varSelect.on("pointerup", function e() {
+        gameMode = "Anti";
+        variantLabel.text = "Variant: " + gameMode;
+        variantSubLabel.text = "Current Variant: " + gameMode;
+    });
+    varSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    varSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    variantScene.addChild(varSelect);
+
+    subVarText = new PIXI.Text("\"Don't step on the imploding mines.\"");
+    subVarText.anchor.set(0.5);
+    subVarText.style = varTextStyle;
+    subVarText.x = sceneWidth / 2;
+    subVarText.y = sceneHeight / 2 + 150;
+    variantScene.addChild(subVarText);
+
+    varSelect = new PIXI.Text("Night");
+    varSelect.anchor.set(0.5);
+    varSelect.style = buttonStyle;
+    varSelect.x = sceneWidth / 2;
+    varSelect.y = sceneHeight / 2 + 180;
+    varSelect.interactive = true;
+    varSelect.buttonMode = true;
+    varSelect.on("pointerup", function e() {
+        gameMode = "Night";
+        variantLabel.text = "Variant: " + gameMode;
+        variantSubLabel.text = "Current Variant: " + gameMode;
+    });
+    varSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    varSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    variantScene.addChild(varSelect);
+
+    subVarText = new PIXI.Text("\"Who knows what may be lurking it the dark...\"");
+    subVarText.anchor.set(0.5);
+    subVarText.style = varTextStyle;
+    subVarText.x = sceneWidth / 2;
+    subVarText.y = sceneHeight / 2 + 210;
+    variantScene.addChild(subVarText);
+
+    varSelect = new PIXI.Text("Back");
+    varSelect.anchor.set(0.5);
+    varSelect.style = buttonStyle;
+    varSelect.x = sceneWidth / 2;
+    varSelect.y = sceneHeight / 2 + 270;
+    varSelect.interactive = true;
+    varSelect.buttonMode = true;
+    varSelect.on("pointerup", function e() {
+        variantScene.visible = false;
+        startScene.visible = true;
+    });
+    varSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    varSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    variantScene.addChild(varSelect);
+
+    //set up customScene
+    
 
     //set up gameScene
     let textStyle = new PIXI.TextStyle({
