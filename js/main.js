@@ -638,7 +638,7 @@ function SafetyMine(mine) {
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
         CoveredTile.toggleMode();
-        scoreLabel.text = `Press Space To Switch. Current Mode: ${CoveredTile.globalMode}. Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
+        scoreLabel.text = `Press Space To Switch Flags. Current Mode: ${CoveredTile.globalMode}. Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
     }
 
     if (e.key === 'r') {
@@ -681,75 +681,122 @@ function setup() {
 
 function createLabelsAndButtons() {
     let buttonStyle = new PIXI.TextStyle({
-        fill: 0xFF000,
+        fill: 0x00000,
         fontSize: 24,
         fontFamily: "Press Start 2P"
     });
 
+    let buttonStyleHover = new PIXI.TextStyle({
+        fill: 0xFF000,
+        fontSize: 24,
+        fontFamily: "Press Start 2P"
+    })
+
     //set up startScene and make start label
-    let startLabel1 = new PIXI.Text("Minesweeper!");
+    let startLabel1 = new PIXI.Text("Minesweeper+");
     startLabel1.style = new PIXI.TextStyle({
-        fill: 0xFFFFFF,
+        fill: 0x000000,
         fontSize: 40,
         fontFamily: "Press Start 2P",
         stroke: 0xFF0000,
         strokeThickness: 6
     });
-    startLabel1.x = 270;
+    startLabel1.anchor.set(0.5);
+    startLabel1.x = sceneWidth / 2;
     startLabel1.y = 120;
     startScene.addChild(startLabel1);
 
     //make middle start label
-    let startLabel2 = new PIXI.Text("Don't blow up");
+    let startLabel2 = new PIXI.Text("Don't Blow Up");
     startLabel2.style = new PIXI.TextStyle({
-        fill: 0xFFFFFF,
+        fill: 0x00000,
         fontSize: 24,
         fontFamily: "Press Start 2P",
         stroke: 0xFF0000,
         strokeThickness: 6
     });
-    startLabel2.x = 350;
-    startLabel2.y = 300;
+    startLabel2.anchor.set(0.5);
+    startLabel2.x = sceneWidth / 2;
+    startLabel2.y = 180;
     startScene.addChild(startLabel2);
 
     //Creates the difficulty buttons
     //Beginner (8x8, 10), Intermediate (16x16, 40), Expert (30x16, 99), Custom (you choose)
     let startButton = new PIXI.Text("Beginner");
+    startButton.anchor.set(0.5);
     startButton.style = buttonStyle;
-    startButton.x = 375;
-    startButton.y = sceneHeight - 160;
+    startButton.x = sceneWidth / 2;
+    startButton.y = sceneHeight / 2;
     startButton.interactive = true;
     startButton.buttonMode = true;
     startButton.on("pointerup", function e() {startGame(8,8,10);}); //startGame is a function reference
-    startButton.on("pointerover", e => e.target.alpha = 0.7);
-    startButton.on("pointerout", e => e.currentTarget.alpha = 1.0);
+    startButton.on("pointerover", e=>e.target.alpha = 0.5);
+    startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
 
     startButton = new PIXI.Text("Intermediate");
+    startButton.anchor.set(0.5);
     startButton.style = buttonStyle;
-    startButton.x = 375;
-    startButton.y = sceneHeight - 130;
+    startButton.x = sceneWidth / 2;
+    startButton.y = sceneHeight / 2 + 30;
     startButton.interactive = true;
     startButton.buttonMode = true;
     startButton.on("pointerup", function e() {startGame(16,16,40);}); //startGame is a function reference
-    startButton.on("pointerover", e => e.target.alpha = 0.7);
-    startButton.on("pointerout", e => e.currentTarget.alpha = 1.0);
+    startButton.on("pointerover", e=>e.target.alpha = 0.5);
+    startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
 
     startButton = new PIXI.Text("Expert");
+    startButton.anchor.set(0.5);
     startButton.style = buttonStyle;
-    startButton.x = 375;
-    startButton.y = sceneHeight - 100;
+    startButton.x = sceneWidth / 2;
+    startButton.y = sceneHeight / 2 + 60;
     startButton.interactive = true;
     startButton.buttonMode = true;
     startButton.on("pointerup", function e() {startGame(30,16,99);}); //startGame is a function reference
-    startButton.on("pointerover", e => e.target.alpha = 0.7);
-    startButton.on("pointerout", e => e.currentTarget.alpha = 1.0);
+    startButton.on("pointerover", e=>e.target.alpha = 0.5);
+    startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    startScene.addChild(startButton);
+
+    startButton = new PIXI.Text("Custom");
+    startButton.anchor.set(0.5);
+    startButton.style = buttonStyle;
+    startButton.x = sceneWidth / 2;
+    startButton.y = sceneHeight / 2 + 90;
+    startButton.interactive = true;
+    startButton.buttonMode = true;
+    startButton.on("pointerup", function e() {startGame(30,16,99);}); //startGame is a function reference
+    startButton.on("pointerover", e=>e.target.alpha = 0.5);
+    startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    startScene.addChild(startButton);
+
+    startButton = new PIXI.Text("Varients");
+    startButton.anchor.set(0.5);
+    startButton.style = buttonStyle;
+    startButton.x = sceneWidth / 2;
+    startButton.y = sceneHeight / 2 + 120;
+    startButton.interactive = true;
+    startButton.buttonMode = true;
+    startButton.on("pointerup", function e() {startGame(30,16,99);}); //startGame is a function reference
+    startButton.on("pointerover", e=>e.target.alpha = 0.5);
+    startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    startScene.addChild(startButton);
+
+    startButton = new PIXI.Text("Rules");
+    startButton.anchor.set(0.5);
+    startButton.style = buttonStyle;
+    startButton.x = sceneWidth / 2;
+    startButton.y = sceneHeight / 2 + 150;
+    startButton.interactive = true;
+    startButton.buttonMode = true;
+    startButton.on("pointerup", function e() {startGame(30,16,99);}); //startGame is a function reference
+    startButton.on("pointerover", e=>e.target.alpha = 0.5);
+    startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
 
     //set up gameScene
     let textStyle = new PIXI.TextStyle({
-        fill: 0xFFFFFF,
+        fill: 0x00000,
         fontSize: 12,
         fontFamily: "Press Start 2P",
         stroke: 0xFF0000,
@@ -759,8 +806,9 @@ function createLabelsAndButtons() {
     //score label
     scoreLabel = new PIXI.Text();
     scoreLabel.style = textStyle;
-    scoreLabel.x = 5;
-    scoreLabel.y = 5;
+    scoreLabel.anchor.set(0.5);
+    scoreLabel.x = sceneWidth / 2;
+    scoreLabel.y = sceneHeight - 20;
     gameScene.addChild(scoreLabel);
 }
 
@@ -773,13 +821,13 @@ function startGame(width, height, mines){
     gameScene.visible = true;
     score = 0;
     paused = false;
-    scoreLabel.text = `Press Space To Switch. Current Mode: ${CoveredTile.globalMode} Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
+    scoreLabel.text = `Press Space To Switch Flags. Current Mode: ${CoveredTile.globalMode} Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
 }
 
 function gameLoop(){
 	if (paused) return; // keep this commented out for now
 
-    scoreLabel.text = `Press Space To Switch. Current Mode: ${CoveredTile.globalMode}. Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
+    scoreLabel.text = `Press Space To Switch Flags. Current Mode: ${CoveredTile.globalMode}. Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
 
     //Checks if you lose
     if(CoveredTile.mineTileClicked != "temp" && safetyClick == false) {
