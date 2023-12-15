@@ -17,8 +17,8 @@ class MineTile extends Tile {
 }
 
 class CoveredTile extends Tile {
-    constructor(x, y, xIndex, yIndex) {
-        super(x, y, xIndex, yIndex, "images/CoveredTile.png", "cover");
+    constructor(x, y, xIndex, yIndex, tileImage, tileData) {
+        super(x, y, xIndex, yIndex, tileImage, tileData);
 
         this.interactive = true;
         this.buttomMode = true;
@@ -38,47 +38,57 @@ class CoveredTile extends Tile {
     }
 
     placeMark() {
-        if(this.parent) {
+        if(this.parent && this.tileData != "night") {
 
             switch (CoveredTile.globalMode) {
                 case "Flag":
                     if (this.texture == PIXI.Texture.from('images/FlagTile.png')) {
                         this.texture = PIXI.Texture.from('images/CoveredTile.png');
+                        CoveredTile.flagsLeft++;
                     }
                     else {
                         this.texture = PIXI.Texture.from('images/FlagTile.png');
+                        CoveredTile.flagsLeft--;
                     }
                 break;
                 case "Double Flag":
                     if (this.texture == PIXI.Texture.from('images/DoubleFlagTile.png')) {
                         this.texture = PIXI.Texture.from('images/CoveredTile.png');
+                        CoveredTile.flagsLeft++;
                     }
                     else {
                         this.texture = PIXI.Texture.from('images/DoubleFlagTile.png');
+                        CoveredTile.flagsLeft--;
                     }
                 break;
                 case "Radioactive Flag":
                     if (this.texture == PIXI.Texture.from('images/RadioactiveFlagTile.png')) {
                         this.texture = PIXI.Texture.from('images/CoveredTile.png');
+                        CoveredTile.flagsLeft++;
                     }
                     else {
                         this.texture = PIXI.Texture.from('images/RadioactiveFlagTile.png');
+                        CoveredTile.flagsLeft--;
                     }
                 break;
                 case "Anti Flag":
                     if (this.texture == PIXI.Texture.from('images/NegFlagTile.png')) {
                         this.texture = PIXI.Texture.from('images/CoveredTile.png');
+                        CoveredTile.flagsLeft++;
                     }
                     else {
                         this.texture = PIXI.Texture.from('images/NegFlagTile.png');
+                        CoveredTile.flagsLeft--;
                     }
                 break;
                 case "Night Flag":
                     if (this.texture == PIXI.Texture.from('images/NightFlagTile.png')) {
                         this.texture = PIXI.Texture.from('images/CoveredTile.png');
+                        CoveredTile.flagsLeft++;
                     }
                     else {
                         this.texture = PIXI.Texture.from('images/NightFlagTile.png');
+                        CoveredTile.flagsLeft--;
                     }
                 break;
                 case "Question":
@@ -99,7 +109,8 @@ class CoveredTile extends Tile {
         if(this.parent && this.containsPoint(event.data.global)) {
                 console.log(CoveredTile.board[this.yIndex][this.xIndex]);
                 if (CoveredTile.board[this.yIndex][this.xIndex] == "e" &&
-                    CoveredTile.nightMode !== true) {
+                    CoveredTile.nightMode == false) {
+                    CoveredTile.dig.play();
                     this.revealAdjacent();
                 }
                 else {
@@ -110,14 +121,41 @@ class CoveredTile extends Tile {
                        CoveredTile.board[this.yIndex][this.xIndex] == "k") {
                             CoveredTile.mineTileClicked = this;
                        }
+                    else {
+                        CoveredTile.dig.play();
+                    }
 
                     this.parent.removeChild(this);
                     CoveredTile.numUncovered++;
                 }
 
             CoveredTile.firstClick++;
+
+            //This changes the tiles around the one clicked from night to covered
+            if (CoveredTile.nightMode == true) {
+                const directions = [
+                    [-1, -1], [-1, 0], [-1, 1],
+                    [0, -1],           [0, 1],
+                    [1, -1],  [1, 0],  [1, 1]
+                ];
+            
+                for (const [rowOffset, colOffset] of directions) {
+                    const newRow = this.yIndex + rowOffset;
+                    const newCol = this.xIndex + colOffset;
+            
+                    if (newRow >= 0 && newRow < CoveredTile.board[0].length &&
+                        newCol >= 0 && newCol < CoveredTile.board.length) 
+                        {
+        
+                        let adjacentTile = CoveredTile.coveredBoard[newRow][newCol];
+                        adjacentTile.texture = PIXI.Texture.from('images/CoveredTile.png');
+                        adjacentTile.tileData = "cover";
+                    }
+                }
+            }    
         }
     }
+
 
     revealAdjacent() {
         if (!this.parent) {return;}
@@ -143,9 +181,9 @@ class CoveredTile extends Tile {
 
                 let adjacentTile = CoveredTile.coveredBoard[newRow][newCol];
     
-                if (adjacentTile !== null && CoveredTile.board[newRow][newCol] == "e") {
+                if (adjacentTile !== null && adjacentTile.parent !== null && CoveredTile.board[newRow][newCol] == "e") {
                     adjacentTile.revealAdjacent();
-                } else if (adjacentTile !== null && CoveredTile.board[newRow][newCol] != "e" &&
+                } else if (adjacentTile !== null && adjacentTile.parent !== null && CoveredTile.board[newRow][newCol] != "e" &&
                            CoveredTile.board[newRow][newCol] != "m" && CoveredTile.board[newRow][newCol] != "d" &&
                            CoveredTile.board[newRow][newCol] != "r" && CoveredTile.board[newRow][newCol] != "a" &&
                            CoveredTile.board[newRow][newCol] != "k") {

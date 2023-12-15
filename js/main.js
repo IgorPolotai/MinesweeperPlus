@@ -24,13 +24,12 @@ const sceneHeight = app.view.height;
 let stage;
 
 // game variables
-let startScene;
-let gameScene,scoreLabel;
+let startScene,variantScene,customScene,rulesScene;
+let gameScene,scoreLabel,flagLabel,timeLabel, face;
 
 let explosionTextures;
 let explosions = [];
-let fireballSound;
-let score = 0;
+let digSound, boomSound, victorySound;
 let paused = true;
 
 //The 2D array that holds all the info
@@ -42,10 +41,11 @@ let normalMineCount = 5;
 let doubleMineCount = 2;
 let radioactiveMineCount = 2;
 let antiMineCount = 2;
-let nightMineCount = 0;
+let nightMineCount = 1;
 let tileCount;
-let gameMode = "double";
+let gameMode = "normal";
 let safetyClick = true;
+let intervalId = 0;
 
 //These two arrays hold all of the tiles
 let tileList = [];
@@ -77,12 +77,24 @@ function GenerateBoard(width, height) {
 }
 
 function GenerateCovers() {
+    let tempData;
+    let tempFile;
+
+    if (CoveredTile.nightMode == true) {
+        tempData = "night";
+        tempFile = "images/NightCoveredTile.png";
+    }
+    else {
+        tempData = "cover";
+        tempFile = "images/CoveredTile.png";
+    }
+
     for (let i = 0; i < boardHeight; i++) {
         let coveredTilesData = [];
         for (let j = 0; j < boardWidth; j++) {
             let newWidth = (app.screen.width / 2) - ((boardWidth / 2) * 32);
-            let newHeight = (app.screen.height / 2) - ((boardHeight / 2) * 32);
-            let coverTile = new CoveredTile(newWidth + j * 32, newHeight + i * 32, j, i);
+            let newHeight = (app.screen.height / 2) - ((boardHeight / 2) * 32 - 50);
+            let coverTile = new CoveredTile(newWidth + j * 32, newHeight + i * 32, j, i, tempFile, tempData);
             coveredTileList.push(coverTile);
             gameScene.addChild(coverTile);
             coveredTilesData.push(coverTile);
@@ -95,13 +107,21 @@ function GenerateCovers() {
     let wall = 0;
 
     //top left corner
-    wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 27, 0, 0, "images/WhiteCornerTile.png", "w");
+    wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 136, 0, 0, "images/WhiteCornerTile.png", "w");
     wallList.push(wall);
     gameScene.addChild(wall);
     //top right corner
-    wall = new Tile(CoveredTile.coveredBoard[0][boardWidth - 1].x + 27, CoveredTile.coveredBoard[0][boardWidth - 1].y - 27, 0, 0, "images/MixedCornerTile.png", "w");
+    wall = new Tile(CoveredTile.coveredBoard[0][boardWidth - 1].x + 27, CoveredTile.coveredBoard[0][boardWidth - 1].y - 136, 0, 0, "images/MixedCornerTile.png", "w");
     wall.scale.y = -1;
     wall.rotation = Math.PI / 2;
+    wallList.push(wall);
+    gameScene.addChild(wall);
+    //left intersection
+    wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 27, 0, 0, "images/LeftIntersectionTile.png", "w");
+    wallList.push(wall);
+    gameScene.addChild(wall);
+    //rightintersection
+    wall = new Tile(CoveredTile.coveredBoard[0][boardWidth - 1].x + 27, CoveredTile.coveredBoard[0][boardWidth - 1].y - 27, 0, 0, "images/RightIntersectionTile.png", "w");
     wallList.push(wall);
     gameScene.addChild(wall);
     //bottom left corner
@@ -112,9 +132,51 @@ function GenerateCovers() {
     wall = new Tile(CoveredTile.coveredBoard[boardHeight - 1][boardWidth - 1].x + 27, CoveredTile.coveredBoard[boardHeight - 1][boardWidth - 1].y + 27, 0, 0, "images/BlackCornerTile.png", "w");
     wallList.push(wall);
     gameScene.addChild(wall);
+    //The walls that surround the UI
+    wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 54, 0, 0, "images/WallTile.png", "w");
+    wall.rotation = Math.PI;
+    wallList.push(wall);
+    gameScene.addChild(wall);
+
+    wall = new Tile(CoveredTile.coveredBoard[0][boardWidth - 1].x + 27, CoveredTile.coveredBoard[0][boardWidth - 1].y  - 54, 0, 0, "images/WallTile.png", "w");
+    wall.rotation = Math.PI;
+    wallList.push(wall);
+    gameScene.addChild(wall);
+
+    wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 81, 0, 0, "images/WallTile.png", "w");
+    wall.rotation = Math.PI;
+    wallList.push(wall);
+    gameScene.addChild(wall);
+
+    flagLabel.x = CoveredTile.coveredBoard[0][0].x + 30;
+    flagLabel.y = CoveredTile.coveredBoard[0][0].y - 81;
+
+    wall = new Tile(CoveredTile.coveredBoard[0][boardWidth - 1].x + 27, CoveredTile.coveredBoard[0][boardWidth - 1].y - 81, 0, 0, "images/WallTile.png", "w");
+    wall.rotation = Math.PI;
+    wallList.push(wall);
+    gameScene.addChild(wall);
+
+    timeLabel.x = CoveredTile.coveredBoard[0][boardWidth - 1].x - 30;
+    timeLabel.y = CoveredTile.coveredBoard[0][boardWidth - 1].y - 81;
+
+    wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 108, 0, 0, "images/WallTile.png", "w");
+    wall.rotation = Math.PI;
+    wallList.push(wall);
+    gameScene.addChild(wall);
+
+    wall = new Tile(CoveredTile.coveredBoard[0][boardWidth - 1].x + 27, CoveredTile.coveredBoard[0][boardWidth - 1].y - 108, 0, 0, "images/WallTile.png", "w");
+    wall.rotation = Math.PI;
+    wallList.push(wall);
+    gameScene.addChild(wall);
+
     //floor and ceiling walls
     for (let i = 0; i < boardWidth; i++) {
         wall = new Tile(CoveredTile.coveredBoard[0][i].x, CoveredTile.coveredBoard[0][i].y - 27, 0, 0, "images/WallTile.png", "w");
+        wall.rotation = -Math.PI / 2;
+        wallList.push(wall);
+        gameScene.addChild(wall);
+
+        wall = new Tile(CoveredTile.coveredBoard[0][i].x, CoveredTile.coveredBoard[0][i].y - 136, 0, 0, "images/WallTile.png", "w");
         wall.rotation = -Math.PI / 2;
         wallList.push(wall);
         gameScene.addChild(wall);
@@ -137,6 +199,18 @@ function GenerateCovers() {
         gameScene.addChild(wall);
     }
 
+    //Add the face sprite
+    face = new PIXI.Sprite.from("images/HappyFace.png");
+    face.anchor.set(0.5);
+    face.x = (wallList[0].x + wallList[1].x) / 2;
+    face.y = CoveredTile.coveredBoard[0][0].y - 80;
+    face.interactive = true;
+    face.on('click', () => {
+        startGame(boardWidth, boardHeight, mineCount);
+    })
+    wallList.push(face);
+    gameScene.addChild(face);
+
 }
 
 // Adds mines to the board
@@ -145,7 +219,7 @@ function GenerateCovers() {
 // 2. not on another mine
 // Then it needs to add 1 to all tiles, except null and other mines
 function GenerateMinesAndNumbers(mines) {
-    
+    CoveredTile.flagsLeft = mines;
     mineCount = mines;
     let mineAssortmentArray = [];
     let radioactiveArray = [];
@@ -162,8 +236,8 @@ function GenerateMinesAndNumbers(mines) {
             CoveredTile.flagList.push("Question");
             break;
         case "double": 
-            mineAssortmentArray.push(mines/2); //id 0 = normal
-            mineAssortmentArray.push(mines/2); //id 1 = double
+            mineAssortmentArray.push(Math.floor(mines/2)); //id 0 = normal
+            mineAssortmentArray.push(Math.floor(mines/2)); //id 1 = double
             mineAssortmentArray.push(0); //id 2 = radioactive
             mineAssortmentArray.push(0); //id 3 = anti
             mineAssortmentArray.push(0); //id 4 = night
@@ -172,30 +246,30 @@ function GenerateMinesAndNumbers(mines) {
             CoveredTile.flagList.push("Question");
             break;
         case "radioactive": 
-            mineAssortmentArray.push(0); //id 0 = normal
+            mineAssortmentArray.push(Math.floor(mines/2)); //id 0 = normal
             mineAssortmentArray.push(0); //id 1 = double
-            mineAssortmentArray.push(mines); //id 2 = radioactive
+            mineAssortmentArray.push(Math.floor(mines/2)); //id 2 = radioactive
             mineAssortmentArray.push(0); //id 3 = anti
             mineAssortmentArray.push(0); //id 4 = night
             CoveredTile.flagList.push("Radioactive Flag");
             CoveredTile.flagList.push("Question");
             break;
         case "anti": 
-            mineAssortmentArray.push(mines/2); //id 0 = normal
+            mineAssortmentArray.push(Math.floor(mines/2)); //id 0 = normal
             mineAssortmentArray.push(0); //id 1 = double
             mineAssortmentArray.push(0); //id 2 = radioactive
-            mineAssortmentArray.push(mines/2); //id 3 = anti
+            mineAssortmentArray.push(Math.floor(mines/2)); //id 3 = anti
             mineAssortmentArray.push(0); //id 4 = night
             CoveredTile.flagList.push("Flag");
             CoveredTile.flagList.push("Anti Flag");
             CoveredTile.flagList.push("Question");
             break;
         case "night": 
-            mineAssortmentArray.push(mines/2); //id 0 = normal
+            mineAssortmentArray.push(Math.floor(mines/2)); //id 0 = normal
             mineAssortmentArray.push(0); //id 1 = double
             mineAssortmentArray.push(0); //id 2 = radioactive
             mineAssortmentArray.push(0); //id 3 = anti
-            mineAssortmentArray.push(mines/2); //id 4 = night
+            mineAssortmentArray.push(Math.floor(mines/2)); //id 4 = night
             CoveredTile.flagList.push("Flag");
             CoveredTile.flagList.push("Night Flag");
             CoveredTile.flagList.push("Question");
@@ -225,6 +299,11 @@ function GenerateMinesAndNumbers(mines) {
 
             CoveredTile.flagList.push("Question");
             break;
+    }
+
+    //Makes sure that there is a correct number of mines
+    if (mines % 2 == 1 && gameMode != "custom" && gameMode != "normal") {
+        mineAssortmentArray[0]++;
     }
 
     CoveredTile.globalMode = CoveredTile.flagList[0];
@@ -322,8 +401,8 @@ function GenerateMinesAndNumbers(mines) {
                 let data = gameBoard[i][j];
                 let tile = 0;
 
-                let newWidth = (app.screen.width / 2) - ((boardWidth / 2) * 32);
-                let newHeight = (app.screen.height / 2) - ((boardHeight / 2) * 32);
+                let newWidth = (app.screen.width / 2) - ((boardWidth / 2) * 32 );
+                let newHeight = (app.screen.height / 2) - ((boardHeight / 2) * 32 - 50);
     
                 switch(data) {
                     case "e": tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ZeroTile.png", "e"); break;
@@ -407,6 +486,8 @@ function ClearBoard() {
 
     mineList = [];
     savedRadioactive = [];
+
+    stopTimer();
 
     safetyClick = true;
     CoveredTile.globalMode = "Temp";
@@ -558,7 +639,7 @@ function SafetyMine(mine) {
             let tile = 0;
 
             let newWidth = (app.screen.width / 2) - ((boardWidth / 2) * 32);
-            let newHeight = (app.screen.height / 2) - ((boardHeight / 2) * 32);
+            let newHeight = (app.screen.height / 2) - ((boardHeight / 2) * 32 - 50);
 
             switch(data) {
                 case "e": tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ZeroTile.png", "e"); break;
@@ -627,10 +708,12 @@ function SafetyMine(mine) {
     GenerateCovers();
 
     //Call the reveal adjacent tile on the now empty mine square
-    for (let i = 0; i < coveredTileList.length; i++) {
-        if(coveredTileList[i].yIndex == savedY &&
-           coveredTileList[i].xIndex == savedX) {
-            coveredTileList[i].revealAdjacent();
+    if (CoveredTile.nightMode == false) {
+        for (let i = 0; i < coveredTileList.length; i++) {
+            if(coveredTileList[i].yIndex == savedY &&
+               coveredTileList[i].xIndex == savedX) {
+                coveredTileList[i].revealAdjacent();
+            }
         }
     }
 }
@@ -659,12 +742,28 @@ function setup() {
     gameScene.visible = false;
     gameScene.interactiveChildren = true;
     stage.addChild(gameScene);
-	// #4 - Create labels for all 3 scenes
+
+    //#3 - Create new scenes
+    variantScene = new PIXI.Container();
+    variantScene.visible = false;
+    stage.addChild(variantScene);
+
+    customScene = new PIXI.Container();
+    customScene.visible = false;
+    customScene.addChild(customScene);
+
+    rulesScene = new PIXI.Container();
+    rulesScene.visible = false;
+    rulesScene.addChild(rulesScene);
+	// #4 - Create labels for all scenes
 	createLabelsAndButtons();
 	// #5 - Create ship
 
 	// #6 - Load Sounds
-    fireballSound = new Howl({src: ['sounds/fireball.mp3']});
+    digSound = new Howl({src: ['sounds/dig.mp3']});
+    boomSound = new Howl({src: ['sounds/boom.mp3']});
+    victorySound = new Howl({src: ['sounds/victoryCut.mp3']});
+    CoveredTile.dig = digSound;
 	//shootSound = new Howl({src: ['sounds/shoot.wav']});
     //hitSound = new Howl({src: ['sounds/hit.mp3']});
 
@@ -682,22 +781,16 @@ function setup() {
 function createLabelsAndButtons() {
     let buttonStyle = new PIXI.TextStyle({
         fill: 0x00000,
-        fontSize: 24,
-        fontFamily: "Press Start 2P"
+        fontSize: 36,
+        fontFamily: "Pixelify Sans"
     });
-
-    let buttonStyleHover = new PIXI.TextStyle({
-        fill: 0xFF000,
-        fontSize: 24,
-        fontFamily: "Press Start 2P"
-    })
 
     //set up startScene and make start label
     let startLabel1 = new PIXI.Text("Minesweeper+");
     startLabel1.style = new PIXI.TextStyle({
         fill: 0x000000,
-        fontSize: 40,
-        fontFamily: "Press Start 2P",
+        fontSize: 60,
+        fontFamily: "Pixelify Sans",
         stroke: 0xFF0000,
         strokeThickness: 6
     });
@@ -710,8 +803,8 @@ function createLabelsAndButtons() {
     let startLabel2 = new PIXI.Text("Don't Blow Up");
     startLabel2.style = new PIXI.TextStyle({
         fill: 0x00000,
-        fontSize: 24,
-        fontFamily: "Press Start 2P",
+        fontSize: 44,
+        fontFamily: "Pixelify Sans",
         stroke: 0xFF0000,
         strokeThickness: 6
     });
@@ -770,7 +863,7 @@ function createLabelsAndButtons() {
     startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
 
-    startButton = new PIXI.Text("Varients");
+    startButton = new PIXI.Text("Variants");
     startButton.anchor.set(0.5);
     startButton.style = buttonStyle;
     startButton.x = sceneWidth / 2;
@@ -797,10 +890,14 @@ function createLabelsAndButtons() {
     //set up gameScene
     let textStyle = new PIXI.TextStyle({
         fill: 0x00000,
-        fontSize: 12,
-        fontFamily: "Press Start 2P",
-        stroke: 0xFF0000,
-        strokeThickness: 4
+        fontSize: 24,
+        fontFamily: "Pixelify Sans"
+    });
+
+    let redTextStyle = new PIXI.TextStyle({
+        fill: 0xFF0000,
+        fontSize: 52,
+        fontFamily: "Pixelify Sans"
     });
 
     //score label
@@ -810,17 +907,33 @@ function createLabelsAndButtons() {
     scoreLabel.x = sceneWidth / 2;
     scoreLabel.y = sceneHeight - 20;
     gameScene.addChild(scoreLabel);
+
+    //flag label
+    flagLabel = new PIXI.Text();
+    flagLabel.style = redTextStyle;
+    flagLabel.anchor.set(0.5);
+    flagLabel.x = sceneWidth / 2 - 100;
+    flagLabel.y = 200;
+    gameScene.addChild(flagLabel);
+
+    //time label
+    timeLabel = new PIXI.Text();
+    timeLabel.style = redTextStyle;
+    timeLabel.anchor.set(0.5);
+    timeLabel.x = sceneWidth / 2 + 100;
+    timeLabel.y = 200;
+    gameScene.addChild(timeLabel);
 }
 
 function startGame(width, height, mines){
     GenerateBoard(width,height);
     GenerateMinesAndNumbers(mines);
     GenerateCovers();
-    console.log("got to here");
     startScene.visible = false;
     gameScene.visible = true;
-    score = 0;
     paused = false;
+    flagLabel.text = CoveredTile.flagsLeft;
+    timeLabel.text = "0";
     scoreLabel.text = `Press Space To Switch Flags. Current Mode: ${CoveredTile.globalMode} Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
 }
 
@@ -828,16 +941,19 @@ function gameLoop(){
 	if (paused) return; // keep this commented out for now
 
     scoreLabel.text = `Press Space To Switch Flags. Current Mode: ${CoveredTile.globalMode}. Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
+    flagLabel.text = CoveredTile.flagsLeft;
 
     //Checks if you lose
     if(CoveredTile.mineTileClicked != "temp" && safetyClick == false) {
         console.log("you went kaboom");
-        createExplosion(CoveredTile.mineTileClicked.x + 16, CoveredTile.mineTileClicked.y + 16, 64, 64);
-        //fireballSound.play();
+        createExplosion(CoveredTile.mineTileClicked.x, CoveredTile.mineTileClicked.y, 64, 64);
+        face.texture = PIXI.Texture.from("images/DeadFace.png");
+        boomSound.play();
         coveredTileList.forEach(c=>gameScene.removeChild(c));
         coveredTileList = [];
         paused = true;
         scoreLabel.text = `You Lose. Press R To Restart`;
+        stopTimer();
     }
     else if (CoveredTile.mineTileClicked != "temp" && safetyClick == true) {
         let mineClicked = null;
@@ -852,18 +968,39 @@ function gameLoop(){
     }
     
 
-    if (CoveredTile.firstClick >= 1) {
+    if (CoveredTile.firstClick >= 1 && safetyClick == true) {
         safetyClick = false;
+        timer();
     }
 
     //Checks if you win
     if (CoveredTile.numUncovered >= tileCount - mineCount) {
+        face.texture = PIXI.Texture.from("images/ShadesFace.png");
         scoreLabel.text = `You Win!!! Press R To Restart`;
+        victorySound.play();
         coveredTileList.forEach(c=>gameScene.removeChild(c));
         coveredTileList = [];
         paused = true;
+        stopTimer();
     }
 	
+}
+
+function timer() {
+    let sec = 0;
+    intervalId = setInterval(function() {
+        timeLabel.text = sec;
+        if (paused == false) {
+            sec++;
+        }
+        if (sec >= 1000) {
+            stopTimer();
+        }
+    }, 1000);
+}
+
+function stopTimer() {
+    clearInterval(intervalId);
 }
 
 function loadSpriteSheet() {

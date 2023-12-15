@@ -1,6 +1,6 @@
 WebFont.load({
     google: {
-        families: ['Press Start 2P']
+        families: ['Pixelify Sans']
     },
     active: e => {
         console.log("font loaded!");
@@ -8,6 +8,7 @@ WebFont.load({
         app.loader.
             add([
                 "images/CoveredTile.png",
+                "images/NightCoveredTile.png",
                 "images/NegOneTile.png",
                 "images/NegTwoTile.png",
                 "images/NegThreeTile.png",
@@ -58,6 +59,11 @@ WebFont.load({
                 "images/MixedCornerTile.png",
                 "images/WhiteCornerTile.png",
                 "images/BlackCornerTile.png",
+                "images/LeftIntersectionTile.png",
+                "images/RightIntersectionTile.png",
+                "images/HappyFace.png",
+                "images/DeadFace.png",
+                "images/ShadesFace.png"
             ]);
         app.loader.onProgress.add(e => { console.log(`progress=${e.progress}`) });
         app.loader.onComplete.add(setup);
