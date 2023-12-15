@@ -53,7 +53,11 @@ WebFont.load({
                 "images/NegFlagTile.png",
                 "images/NightFlagTile.png",
                 "images/QuestionTile.png",
-                "images/explosions.png"
+                "images/explosions.png",
+                "images/WallTile.png",
+                "images/MixedCornerTile.png",
+                "images/WhiteCornerTile.png",
+                "images/BlackCornerTile.png",
             ]);
         app.loader.onProgress.add(e => { console.log(`progress=${e.progress}`) });
         app.loader.onComplete.add(setup);

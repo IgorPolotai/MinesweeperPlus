@@ -1,7 +1,7 @@
 class Tile extends PIXI.Sprite {
     constructor(x, y, xIndex, yIndex, tileImage, tileData) {
         super(app.loader.resources[tileImage].texture);
-        //this.anchor.set(.5,.5);
+        this.anchor.set(.5,.5);
         this.x = x;
         this.y = y;
         this.xIndex = xIndex;
@@ -13,20 +13,6 @@ class Tile extends PIXI.Sprite {
 class MineTile extends Tile {
     constructor(x, y, xIndex, yIndex, tileImage, tileData) {
         super(x, y, xIndex, yIndex, tileImage, tileData);
-
-        this.interactive = true;
-        this.buttomMode = true;
-        this.on('pointerup', this.onSpriteClick.bind(this));
-        this.clicked = false;
-    }
-
-    //Ends the game if a Mine Tile is clicked
-    onSpriteClick() {
-        console.log("get ready for the");
-        if(this.parent) {
-            this.clicked = true;
-            console.log("boom!!!!");
-        }
     }
 }
 
@@ -36,7 +22,7 @@ class CoveredTile extends Tile {
 
         this.interactive = true;
         this.buttomMode = true;
-        this.on('mousedown', this.onSpriteClick.bind(this));
+        this.on('mouseup', this.onSpriteClick.bind(this));
         this.on('rightdown', this.placeMark.bind(this));
     }
 
@@ -109,14 +95,22 @@ class CoveredTile extends Tile {
     
 
     //Removes the Covered Tile when it is clicked, but only in the Game Scene
-    onSpriteClick() {
-        if(this.parent) {
+    onSpriteClick(event) {
+        if(this.parent && this.containsPoint(event.data.global)) {
                 console.log(CoveredTile.board[this.yIndex][this.xIndex]);
                 if (CoveredTile.board[this.yIndex][this.xIndex] == "e" &&
                     CoveredTile.nightMode !== true) {
                     this.revealAdjacent();
                 }
                 else {
+                    if(CoveredTile.board[this.yIndex][this.xIndex] == "m" ||
+                       CoveredTile.board[this.yIndex][this.xIndex] == "d" ||
+                       CoveredTile.board[this.yIndex][this.xIndex] == "r" ||
+                       CoveredTile.board[this.yIndex][this.xIndex] == "a" ||
+                       CoveredTile.board[this.yIndex][this.xIndex] == "k") {
+                            CoveredTile.mineTileClicked = this;
+                       }
+
                     this.parent.removeChild(this);
                     CoveredTile.numUncovered++;
                 }
@@ -150,13 +144,12 @@ class CoveredTile extends Tile {
                 let adjacentTile = CoveredTile.coveredBoard[newRow][newCol];
     
                 if (adjacentTile !== null && CoveredTile.board[newRow][newCol] == "e") {
-                    console.log("try again");
                     adjacentTile.revealAdjacent();
                 } else if (adjacentTile !== null && CoveredTile.board[newRow][newCol] != "e" &&
                            CoveredTile.board[newRow][newCol] != "m" && CoveredTile.board[newRow][newCol] != "d" &&
                            CoveredTile.board[newRow][newCol] != "r" && CoveredTile.board[newRow][newCol] != "a" &&
                            CoveredTile.board[newRow][newCol] != "k") {
-                    console.log("removing adjacent: " + (adjacentTile == null));
+                    console.log("removing adjacent: " + (adjacentTile.parent == null));
                     adjacentTile.parent.removeChild(adjacentTile);
                     CoveredTile.numUncovered++;
                     CoveredTile.coveredBoard[newRow][newCol] = null;

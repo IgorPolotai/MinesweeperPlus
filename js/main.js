@@ -10,8 +10,9 @@
 
 "use strict";
 const app = new PIXI.Application({
-    width: 1024,
-    height: 576
+    width: window.innerWidth,
+    height: window.innerHeight,
+    backgroundColor: 0xd3d3d3
 });
 document.body.appendChild(app.view);
 
@@ -51,6 +52,7 @@ let tileList = [];
 let coveredTileList = [];
 let mineList = [];
 let savedRadioactive = [];
+let wallList = [];
 
 // Disables context menu so right click can maybe work.
 document.addEventListener('contextmenu', event => event.preventDefault());
@@ -78,7 +80,9 @@ function GenerateCovers() {
     for (let i = 0; i < boardHeight; i++) {
         let coveredTilesData = [];
         for (let j = 0; j < boardWidth; j++) {
-            let coverTile = new CoveredTile(32 + j * 32, 32 + i * 32, j, i);
+            let newWidth = (app.screen.width / 2) - ((boardWidth / 2) * 32);
+            let newHeight = (app.screen.height / 2) - ((boardHeight / 2) * 32);
+            let coverTile = new CoveredTile(newWidth + j * 32, newHeight + i * 32, j, i);
             coveredTileList.push(coverTile);
             gameScene.addChild(coverTile);
             coveredTilesData.push(coverTile);
@@ -86,6 +90,53 @@ function GenerateCovers() {
         CoveredTile.coveredBoard.push(coveredTilesData);
     }
     console.log(CoveredTile.coveredBoard);
+
+    //Creates the walls
+    let wall = 0;
+
+    //top left corner
+    wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 27, 0, 0, "images/WhiteCornerTile.png", "w");
+    wallList.push(wall);
+    gameScene.addChild(wall);
+    //top right corner
+    wall = new Tile(CoveredTile.coveredBoard[0][boardWidth - 1].x + 27, CoveredTile.coveredBoard[0][boardWidth - 1].y - 27, 0, 0, "images/MixedCornerTile.png", "w");
+    wall.scale.y = -1;
+    wall.rotation = Math.PI / 2;
+    wallList.push(wall);
+    gameScene.addChild(wall);
+    //bottom left corner
+    wall = new Tile(CoveredTile.coveredBoard[boardHeight - 1][0].x - 27, CoveredTile.coveredBoard[boardHeight - 1][0].y + 27, 0, 0, "images/MixedCornerTile.png", "w");
+    wallList.push(wall);
+    gameScene.addChild(wall);
+    //bottom right corner
+    wall = new Tile(CoveredTile.coveredBoard[boardHeight - 1][boardWidth - 1].x + 27, CoveredTile.coveredBoard[boardHeight - 1][boardWidth - 1].y + 27, 0, 0, "images/BlackCornerTile.png", "w");
+    wallList.push(wall);
+    gameScene.addChild(wall);
+    //floor and ceiling walls
+    for (let i = 0; i < boardWidth; i++) {
+        wall = new Tile(CoveredTile.coveredBoard[0][i].x, CoveredTile.coveredBoard[0][i].y - 27, 0, 0, "images/WallTile.png", "w");
+        wall.rotation = -Math.PI / 2;
+        wallList.push(wall);
+        gameScene.addChild(wall);
+
+        wall = new Tile(CoveredTile.coveredBoard[boardHeight - 1][i].x, CoveredTile.coveredBoard[boardHeight - 1][i].y + 27, 0, 0, "images/WallTile.png", "w");
+        wall.rotation = -Math.PI / 2;
+        wallList.push(wall);
+        gameScene.addChild(wall);
+    }
+    //left and right walls
+    for (let i = 0; i < boardHeight; i++) {
+        wall = new Tile(CoveredTile.coveredBoard[i][0].x - 27, CoveredTile.coveredBoard[i][0].y, 0, 0, "images/WallTile.png", "w");
+        wall.rotation = Math.PI;
+        wallList.push(wall);
+        gameScene.addChild(wall);
+
+        wall = new Tile(CoveredTile.coveredBoard[i][boardWidth - 1].x + 27, CoveredTile.coveredBoard[i][boardWidth - 1].y, 0, 0, "images/WallTile.png", "w");
+        wall.rotation = Math.PI;
+        wallList.push(wall);
+        gameScene.addChild(wall);
+    }
+
 }
 
 // Adds mines to the board
@@ -270,60 +321,63 @@ function GenerateMinesAndNumbers(mines) {
             for (let j = 0; j < boardWidth; j++) {
                 let data = gameBoard[i][j];
                 let tile = 0;
+
+                let newWidth = (app.screen.width / 2) - ((boardWidth / 2) * 32);
+                let newHeight = (app.screen.height / 2) - ((boardHeight / 2) * 32);
     
                 switch(data) {
-                    case "e": tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ZeroTile.png", "e"); break;
-                    case -8: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegEightTile.png", "-8"); break;
-                    case -7: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegSevenTile.png", "-7"); break;
-                    case -6: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegSixTile.png", "-6"); break;
-                    case -5: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegFiveTile.png", "-5"); break;
-                    case -4: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegFourTile.png", "-4"); break;
-                    case -3: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegThreeTile.png", "-3"); break;
-                    case -2: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegTwoTile.png", "-2"); break;
-                    case -1: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegOneTile.png", "-1"); break;
-                    case 0: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ZeroNumTile.png", "0"); break;
-                    case 1: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/OneTile.png", "1"); break;
-                    case 2: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwoTile.png", "2"); break;
-                    case 3: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ThreeTile.png", "3"); break;
-                    case 4: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FourTile.png", "4"); break;
-                    case 5: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FiveTile.png", "5"); break;
-                    case 6: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SixTile.png", "6"); break;
-                    case 7: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SevenTile.png", "7"); break;
-                    case 8: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/EightTile.png", "8"); break;
-                    case 9: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NineTile.png", "9"); break;
-                    case 10: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TenTile.png", "10"); break;
-                    case 11: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ElevenTile.png", "11"); break;
-                    case 12: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwelveTile.png", "12"); break;
-                    case 13: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ThirteenTile.png", "13"); break;
-                    case 14: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FourteenTile.png", "14"); break;
-                    case 15: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FifteenTile.png", "15"); break;
-                    case 16: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SixteenTile.png", "16"); break;
-                    case 17: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SeventeenTile.png", "17"); break;
-                    case 18: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/EighteenTile.png", "18"); break;
-                    case 19: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NineteenTile.png", "19"); break;
-                    case 20: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyTile.png", "20"); break;
-                    case 21: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyOneTile.png", "21"); break;
-                    case 22: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyTwoTile.png", "22"); break;
-                    case 23: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyThreeTile.png", "23"); break;
-                    case 24: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyFourTile.png", "24"); break;
+                    case "e": tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ZeroTile.png", "e"); break;
+                    case -8: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegEightTile.png", "-8"); break;
+                    case -7: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegSevenTile.png", "-7"); break;
+                    case -6: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegSixTile.png", "-6"); break;
+                    case -5: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegFiveTile.png", "-5"); break;
+                    case -4: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegFourTile.png", "-4"); break;
+                    case -3: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegThreeTile.png", "-3"); break;
+                    case -2: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegTwoTile.png", "-2"); break;
+                    case -1: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegOneTile.png", "-1"); break;
+                    case 0: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ZeroNumTile.png", "0"); break;
+                    case 1: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/OneTile.png", "1"); break;
+                    case 2: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwoTile.png", "2"); break;
+                    case 3: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ThreeTile.png", "3"); break;
+                    case 4: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/FourTile.png", "4"); break;
+                    case 5: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/FiveTile.png", "5"); break;
+                    case 6: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/SixTile.png", "6"); break;
+                    case 7: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/SevenTile.png", "7"); break;
+                    case 8: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/EightTile.png", "8"); break;
+                    case 9: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NineTile.png", "9"); break;
+                    case 10: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TenTile.png", "10"); break;
+                    case 11: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ElevenTile.png", "11"); break;
+                    case 12: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwelveTile.png", "12"); break;
+                    case 13: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ThirteenTile.png", "13"); break;
+                    case 14: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/FourteenTile.png", "14"); break;
+                    case 15: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/FifteenTile.png", "15"); break;
+                    case 16: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/SixteenTile.png", "16"); break;
+                    case 17: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/SeventeenTile.png", "17"); break;
+                    case 18: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/EighteenTile.png", "18"); break;
+                    case 19: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NineteenTile.png", "19"); break;
+                    case 20: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwentyTile.png", "20"); break;
+                    case 21: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwentyOneTile.png", "21"); break;
+                    case 22: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwentyTwoTile.png", "22"); break;
+                    case 23: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwentyThreeTile.png", "23"); break;
+                    case 24: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwentyFourTile.png", "24"); break;
                     case "m": //mine
-                        tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/MineTile.png", "m"); 
+                        tile = new MineTile(newWidth + j * 32, newHeight + i * 32, j, i, "images/MineTile.png", "m"); 
                         mineList.push(tile);
                         break;
                     case "d": //double mine
-                        tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/DoubleMineTile.png", "d"); 
+                        tile = new MineTile(newWidth + j * 32, newHeight + i * 32, j, i, "images/DoubleMineTile.png", "d"); 
                         mineList.push(tile);
                         break;
                     case "r": //radioactive mine
-                        tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/RadioactiveTile.png", "r"); 
+                        tile = new MineTile(newWidth + j * 32, newHeight + i * 32, j, i, "images/RadioactiveTile.png", "r"); 
                         mineList.push(tile);
                         break;
                     case "a": //anti mine
-                        tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/AntiMineTile.png", "a"); 
+                        tile = new MineTile(newWidth + j * 32, newHeight + i * 32, j, i, "images/AntiMineTile.png", "a"); 
                         mineList.push(tile);
                         break;
                     case "k": //night mine
-                        tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/NightMineTile.png", "k"); 
+                        tile = new MineTile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NightMineTile.png", "k"); 
                         mineList.push(tile);
                         break;
                 }
@@ -348,6 +402,9 @@ function ClearBoard() {
     explosions.forEach(e=>gameScene.removeChild(e));
     explosions = [];
 
+    wallList.forEach(w=>gameScene.removeChild(w));
+    wallList = [];
+
     mineList = [];
     savedRadioactive = [];
 
@@ -360,6 +417,7 @@ function ClearBoard() {
     CoveredTile.currentFlag = 0;
     CoveredTile.nightMode = false;
     CoveredTile.firstClick = 0;
+    CoveredTile.mineTileClicked = "temp";
 }
 
 function SafetyMine(mine) {
@@ -499,59 +557,62 @@ function SafetyMine(mine) {
             let data = gameBoard[i][j];
             let tile = 0;
 
+            let newWidth = (app.screen.width / 2) - ((boardWidth / 2) * 32);
+            let newHeight = (app.screen.height / 2) - ((boardHeight / 2) * 32);
+
             switch(data) {
-                case "e": tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ZeroTile.png", "e"); break;
-                case -8: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegEightTile.png", "-8"); break;
-                case -7: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegSevenTile.png", "-7"); break;
-                case -6: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegSixTile.png", "-6"); break;
-                case -5: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegFiveTile.png", "-5"); break;
-                case -4: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegFourTile.png", "-4"); break;
-                case -3: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegThreeTile.png", "-3"); break;
-                case -2: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegTwoTile.png", "-2"); break;
-                case -1: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NegOneTile.png", "-1"); break;
-                case 0: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ZeroNumTile.png", "0"); break;
-                case 1: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/OneTile.png", "1"); break;
-                case 2: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwoTile.png", "2"); break;
-                case 3: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ThreeTile.png", "3"); break;
-                case 4: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FourTile.png", "4"); break;
-                case 5: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FiveTile.png", "5"); break;
-                case 6: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SixTile.png", "6"); break;
-                case 7: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SevenTile.png", "7"); break;
-                case 8: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/EightTile.png", "8"); break;
-                case 9: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NineTile.png", "9"); break;
-                case 10: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TenTile.png", "10"); break;
-                case 11: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ElevenTile.png", "11"); break;
-                case 12: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwelveTile.png", "12"); break;
-                case 13: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/ThirteenTile.png", "13"); break;
-                case 14: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FourteenTile.png", "14"); break;
-                case 15: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/FifteenTile.png", "15"); break;
-                case 16: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SixteenTile.png", "16"); break;
-                case 17: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/SeventeenTile.png", "17"); break;
-                case 18: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/EighteenTile.png", "18"); break;
-                case 19: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/NineteenTile.png", "19"); break;
-                case 20: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyTile.png", "20"); break;
-                case 21: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyOneTile.png", "21"); break;
-                case 22: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyTwoTile.png", "22"); break;
-                case 23: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyThreeTile.png", "23"); break;
-                case 24: tile = new Tile(32 + j * 32, 32 + i * 32, j, i, "images/TwentyFourTile.png", "24"); break;
+                case "e": tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ZeroTile.png", "e"); break;
+                case -8: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegEightTile.png", "-8"); break;
+                case -7: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegSevenTile.png", "-7"); break;
+                case -6: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegSixTile.png", "-6"); break;
+                case -5: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegFiveTile.png", "-5"); break;
+                case -4: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegFourTile.png", "-4"); break;
+                case -3: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegThreeTile.png", "-3"); break;
+                case -2: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegTwoTile.png", "-2"); break;
+                case -1: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NegOneTile.png", "-1"); break;
+                case 0: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ZeroNumTile.png", "0"); break;
+                case 1: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/OneTile.png", "1"); break;
+                case 2: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwoTile.png", "2"); break;
+                case 3: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ThreeTile.png", "3"); break;
+                case 4: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/FourTile.png", "4"); break;
+                case 5: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/FiveTile.png", "5"); break;
+                case 6: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/SixTile.png", "6"); break;
+                case 7: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/SevenTile.png", "7"); break;
+                case 8: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/EightTile.png", "8"); break;
+                case 9: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NineTile.png", "9"); break;
+                case 10: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TenTile.png", "10"); break;
+                case 11: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ElevenTile.png", "11"); break;
+                case 12: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwelveTile.png", "12"); break;
+                case 13: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/ThirteenTile.png", "13"); break;
+                case 14: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/FourteenTile.png", "14"); break;
+                case 15: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/FifteenTile.png", "15"); break;
+                case 16: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/SixteenTile.png", "16"); break;
+                case 17: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/SeventeenTile.png", "17"); break;
+                case 18: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/EighteenTile.png", "18"); break;
+                case 19: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NineteenTile.png", "19"); break;
+                case 20: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwentyTile.png", "20"); break;
+                case 21: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwentyOneTile.png", "21"); break;
+                case 22: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwentyTwoTile.png", "22"); break;
+                case 23: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwentyThreeTile.png", "23"); break;
+                case 24: tile = new Tile(newWidth + j * 32, newHeight + i * 32, j, i, "images/TwentyFourTile.png", "24"); break;
                 case "m": //mine
-                    tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/MineTile.png", "m"); 
+                    tile = new MineTile(newWidth + j * 32, newHeight + i * 32, j, i, "images/MineTile.png", "m"); 
                     mineList.push(tile);
                     break;
                 case "d": //double mine
-                    tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/DoubleMineTile.png", "d"); 
+                    tile = new MineTile(newWidth + j * 32, newHeight + i * 32, j, i, "images/DoubleMineTile.png", "d"); 
                     mineList.push(tile);
                     break;
                 case "r": //radioactive mine
-                    tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/RadioactiveTile.png", "r"); 
+                    tile = new MineTile(newWidth + j * 32, newHeight + i * 32, j, i, "images/RadioactiveTile.png", "r"); 
                     mineList.push(tile);
                     break;
                 case "a": //anti mine
-                    tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/AntiMineTile.png", "a"); 
+                    tile = new MineTile(newWidth + j * 32, newHeight + i * 32, j, i, "images/AntiMineTile.png", "a"); 
                     mineList.push(tile);
                     break;
                 case "k": //night mine
-                    tile = new MineTile(32 + j * 32, 32 + i * 32, j, i, "images/NightMineTile.png", "k"); 
+                    tile = new MineTile(newWidth + j * 32, newHeight + i * 32, j, i, "images/NightMineTile.png", "k"); 
                     mineList.push(tile);
                     break;
             }
@@ -572,10 +633,6 @@ function SafetyMine(mine) {
             coveredTileList[i].revealAdjacent();
         }
     }
-}
-
-function end(result) {
-    console.log("Result: " + result);
 }
 
 document.addEventListener('keydown', (e) => {
@@ -725,23 +782,29 @@ function gameLoop(){
     scoreLabel.text = `Press Space To Switch. Current Mode: ${CoveredTile.globalMode}. Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
 
     //Checks if you lose
-	for (let i = 0; i < mineList.length; i++) {
-        if(mineList[i].clicked == true && safetyClick == false) {
-            console.log("you went kaboom");
-            createExplosion(mineList[i].x + 16, mineList[i].y + 16, 64, 64);
-            //fireballSound.play();
-            coveredTileList.forEach(c=>gameScene.removeChild(c));
-            coveredTileList = [];
-            paused = true;
-            scoreLabel.text = `You Lose. Press R To Restart`;
-        }
-        else if (mineList[i].clicked == true && safetyClick == true) {
-            mineList[i].clicked = false;
-            SafetyMine(mineList[i]);
-        }
+    if(CoveredTile.mineTileClicked != "temp" && safetyClick == false) {
+        console.log("you went kaboom");
+        createExplosion(CoveredTile.mineTileClicked.x + 16, CoveredTile.mineTileClicked.y + 16, 64, 64);
+        //fireballSound.play();
+        coveredTileList.forEach(c=>gameScene.removeChild(c));
+        coveredTileList = [];
+        paused = true;
+        scoreLabel.text = `You Lose. Press R To Restart`;
     }
+    else if (CoveredTile.mineTileClicked != "temp" && safetyClick == true) {
+        let mineClicked = null;
+        for (let i = 0; i < mineList.length; i++) {
+            if (mineList[i].yIndex == CoveredTile.mineTileClicked.yIndex &&
+                mineList[i].xIndex == CoveredTile.mineTileClicked.xIndex) {
+                    mineClicked = mineList[i];
+            }
+        }
+        CoveredTile.mineTileClicked = "temp";
+        SafetyMine(mineClicked);
+    }
+    
 
-    if (CoveredTile.firstClick >= 2) {
+    if (CoveredTile.firstClick >= 1) {
         safetyClick = false;
     }
 
