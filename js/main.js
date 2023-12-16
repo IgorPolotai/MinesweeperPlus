@@ -34,18 +34,22 @@ let paused = true;
 
 //The 2D array that holds all the info
 let gameBoard;
-let boardWidth;
-let boardHeight;
-let mineCount;
-let normalMineCount = 5;
-let doubleMineCount = 2;
-let radioactiveMineCount = 2;
-let antiMineCount = 2;
-let nightMineCount = 1;
+let boardWidth = 3;
+let boardHeight = 3;
+let mineCount = 0;
+let normalMineCount = 0;
+let doubleMineCount = 0;
+let radioactiveMineCount = 0;
+let antiMineCount = 0;
+let nightMineCount = 0;
 let tileCount;
 let gameMode = "Normal";
 let safetyClick = true;
 let intervalId = 0;
+
+//Labels for custom game
+let cusHeightLabel, cusWidthLabel, cusNormalLabel, 
+    cusDoubleLabel, cusRadLabel, cusAntiLabel, cusNightLabel;
 
 //These two arrays hold all of the tiles
 let tileList = [];
@@ -303,7 +307,7 @@ function GenerateMinesAndNumbers(mines) {
     }
 
     //Makes sure that there is a correct number of mines
-    if (mines % 2 == 1 && gameMode != "custom" && gameMode != "normal") {
+    if (mines % 2 == 1 && gameMode != "Custom" && gameMode != "Normal") {
         mineAssortmentArray[0]++;
     }
 
@@ -1076,7 +1080,376 @@ function createLabelsAndButtons() {
     variantScene.addChild(varSelect);
 
     //set up customScene
-    
+
+    let plusMinusStyle = new PIXI.TextStyle({
+        fill: 0x00000,
+        fontSize: 64,
+        fontFamily: "Pixelify Sans"
+    });
+
+    let numberStyle = new PIXI.TextStyle({
+        fill: 0x00000,
+        fontSize: 64,
+        fontFamily: "Pixelify Sans"
+    });
+
+    //choose your own board height
+    let cusSelect = new PIXI.Text("+");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2;
+    cusSelect.y = sceneHeight / 2 - 180;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        boardHeight++;
+        cusHeightLabel.text = boardHeight;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    let cusHeightLabel = new PIXI.Text(boardHeight);
+    cusHeightLabel.anchor.set(0.5);
+    cusHeightLabel.style = numberStyle;
+    cusHeightLabel.x = sceneWidth / 2 + 60;
+    cusHeightLabel.y = sceneHeight / 2 - 180;
+    customScene.addChild(cusHeightLabel);
+
+    let cusText = new PIXI.Text("Number Of Rows: ");
+    cusText.anchor.set(0.5);
+    cusText.style = buttonStyle;
+    cusText.x = sceneWidth / 2 - 250;
+    cusText.y = sceneHeight / 2 - 180;
+    customScene.addChild(cusText);
+
+    cusSelect = new PIXI.Text("-");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2 + 120;
+    cusSelect.y = sceneHeight / 2 - 180;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        boardHeight--;
+        if(boardHeight<=3) {boardHeight = 3};
+        cusHeightLabel.text = boardHeight;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    //choose your own board width
+    cusSelect = new PIXI.Text("+");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2;
+    cusSelect.y = sceneHeight / 2 - 120;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        boardWidth++;
+        cusWidthLabel.text = boardWidth;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    let cusWidthLabel = new PIXI.Text(boardWidth);
+    cusWidthLabel.anchor.set(0.5);
+    cusWidthLabel.style = numberStyle;
+    cusWidthLabel.x = sceneWidth / 2 + 60;
+    cusWidthLabel.y = sceneHeight / 2 - 120;
+    customScene.addChild(cusWidthLabel);
+
+    cusText = new PIXI.Text("Number Of Columns: ");
+    cusText.anchor.set(0.5);
+    cusText.style = buttonStyle;
+    cusText.x = sceneWidth / 2 - 273;
+    cusText.y = sceneHeight / 2 - 120;
+    customScene.addChild(cusText);
+
+    cusSelect = new PIXI.Text("-");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2 + 120;
+    cusSelect.y = sceneHeight / 2 - 120;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        boardWidth--;
+        if(boardWidth<=3) {boardWidth = 3};
+        cusWidthLabel.text = boardWidth;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    //choose your number of normal mines
+    cusSelect = new PIXI.Text("+");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2;
+    cusSelect.y = sceneHeight / 2 - 60;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        normalMineCount++;
+        cusNormalLabel.text = normalMineCount;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    let cusNormalLabel = new PIXI.Text(normalMineCount);
+    cusNormalLabel.anchor.set(0.5);
+    cusNormalLabel.style = numberStyle;
+    cusNormalLabel.x = sceneWidth / 2 + 60;
+    cusNormalLabel.y = sceneHeight / 2 - 60;
+    customScene.addChild(cusNormalLabel);
+
+    cusText = new PIXI.Text("Number Of Normal Mines: ");
+    cusText.anchor.set(0.5);
+    cusText.style = buttonStyle;
+    cusText.x = sceneWidth / 2 - 315;
+    cusText.y = sceneHeight / 2 - 60;
+    customScene.addChild(cusText);
+
+    cusSelect = new PIXI.Text("-");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2 + 120;
+    cusSelect.y = sceneHeight / 2 - 60;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        normalMineCount--;
+        if(normalMineCount<=0) {normalMineCount = 0};
+        cusNormalLabel.text = normalMineCount;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    //choose your number of double mines
+    cusSelect = new PIXI.Text("+");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2;
+    cusSelect.y = sceneHeight / 2;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        doubleMineCount++;
+        cusDoubleLabel.text = doubleMineCount;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    let cusDoubleLabel = new PIXI.Text(doubleMineCount);
+    cusDoubleLabel.anchor.set(0.5);
+    cusDoubleLabel.style = numberStyle;
+    cusDoubleLabel.x = sceneWidth / 2 + 60;
+    cusDoubleLabel.y = sceneHeight / 2;
+    customScene.addChild(cusDoubleLabel);
+
+    cusText = new PIXI.Text("Number Of Double Mines: ");
+    cusText.anchor.set(0.5);
+    cusText.style = buttonStyle;
+    cusText.x = sceneWidth / 2 - 311;
+    cusText.y = sceneHeight / 2;
+    customScene.addChild(cusText);
+
+    cusSelect = new PIXI.Text("-");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2 + 120;
+    cusSelect.y = sceneHeight / 2;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        doubleMineCount--;
+        if(doubleMineCount<=0) {doubleMineCount = 0};
+        cusDoubleLabel.text = doubleMineCount;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    //choose your number of radioactive mines
+    cusSelect = new PIXI.Text("+");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2;
+    cusSelect.y = sceneHeight / 2 + 60;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        radioactiveMineCount++;
+        cusRadLabel.text = radioactiveMineCount;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    let cusRadLabel = new PIXI.Text(radioactiveMineCount);
+    cusRadLabel.anchor.set(0.5);
+    cusRadLabel.style = numberStyle;
+    cusRadLabel.x = sceneWidth / 2 + 60;
+    cusRadLabel.y = sceneHeight / 2 + 60;
+    customScene.addChild(cusRadLabel);
+
+    cusText = new PIXI.Text("Number Of Radioactive Mines: ");
+    cusText.anchor.set(0.5);
+    cusText.style = buttonStyle;
+    cusText.x = sceneWidth / 2 - 357;
+    cusText.y = sceneHeight / 2 + 60;
+    customScene.addChild(cusText);
+
+    cusSelect = new PIXI.Text("-");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2 + 120;
+    cusSelect.y = sceneHeight / 2 + 60;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        radioactiveMineCount--;
+        if(radioactiveMineCount<=0) {radioactiveMineCount = 0};
+        cusRadLabel.text = radioactiveMineCount;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    //choose your number of anti mines
+    cusSelect = new PIXI.Text("+");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2;
+    cusSelect.y = sceneHeight / 2 + 120;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        antiMineCount++;
+        cusAntiLabel.text = antiMineCount;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    let cusAntiLabel = new PIXI.Text(antiMineCount);
+    cusAntiLabel.anchor.set(0.5);
+    cusAntiLabel.style = numberStyle;
+    cusAntiLabel.x = sceneWidth / 2 + 60;
+    cusAntiLabel.y = sceneHeight / 2 + 120;
+    customScene.addChild(cusAntiLabel);
+
+    cusText = new PIXI.Text("Number Of Anti Mines: ");
+    cusText.anchor.set(0.5);
+    cusText.style = buttonStyle;
+    cusText.x = sceneWidth / 2 - 290;
+    cusText.y = sceneHeight / 2 + 120;
+    customScene.addChild(cusText);
+
+    cusSelect = new PIXI.Text("-");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2 + 120;
+    cusSelect.y = sceneHeight / 2 + 120;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        antiMineCount--;
+        if(antiMineCount<=0) {antiMineCount = 0};
+        cusAntiLabel.text = antiMineCount;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    //choose your number of night mines
+    cusSelect = new PIXI.Text("+");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2;
+    cusSelect.y = sceneHeight / 2 + 180;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        nightMineCount++;
+        cusNightLabel.text = nightMineCount;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    let cusNightLabel = new PIXI.Text(nightMineCount);
+    cusNightLabel.anchor.set(0.5);
+    cusNightLabel.style = numberStyle;
+    cusNightLabel.x = sceneWidth / 2 + 60;
+    cusNightLabel.y = sceneHeight / 2 + 180;
+    customScene.addChild(cusNightLabel);
+
+    cusText = new PIXI.Text("Number Of Night Mines: ");
+    cusText.anchor.set(0.5);
+    cusText.style = buttonStyle;
+    cusText.x = sceneWidth / 2 - 297;
+    cusText.y = sceneHeight / 2 + 180;
+    customScene.addChild(cusText);
+
+    cusSelect = new PIXI.Text("-");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = plusMinusStyle;
+    cusSelect.x = sceneWidth / 2 + 120;
+    cusSelect.y = sceneHeight / 2 + 180;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        nightMineCount--;
+        if(nightMineCount<=0) {nightMineCount = 0};
+        cusNightLabel.text = nightMineCount;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    //custom start button
+    cusSelect = new PIXI.Text("Start");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = buttonStyle;
+    cusSelect.x = sceneWidth / 2;
+    cusSelect.y = sceneHeight / 2 + 270;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        let total = normalMineCount + doubleMineCount + radioactiveMineCount + antiMineCount + nightMineCount;
+        if (total <= (boardHeight * boardWidth) - 1 && total > 0) {
+            gameMode = "Custom";
+            boardWidth = parseInt(cusWidthLabel.text);
+            boardHeight = parseInt(cusHeightLabel.text);
+            startGame(boardWidth,boardHeight,total);
+        }
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
+
+    cusSelect = new PIXI.Text("Back");
+    cusSelect.anchor.set(0.5);
+    cusSelect.style = buttonStyle;
+    cusSelect.x = sceneWidth / 2;
+    cusSelect.y = sceneHeight / 2 + 330;
+    cusSelect.interactive = true;
+    cusSelect.buttonMode = true;
+    cusSelect.on("pointerup", function e() {
+        customScene.visible = false;
+        startScene.visible = true;
+    });
+    cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    customScene.addChild(cusSelect);
 
     //set up gameScene
     let textStyle = new PIXI.TextStyle({
@@ -1121,6 +1494,7 @@ function startGame(width, height, mines){
     GenerateMinesAndNumbers(mines);
     GenerateCovers();
     startScene.visible = false;
+    customScene.visible = false;
     gameScene.visible = true;
     paused = false;
     flagLabel.text = CoveredTile.flagsLeft;
@@ -1154,6 +1528,7 @@ function gameLoop(){
                     mineClicked = mineList[i];
             }
         }
+        timer();
         CoveredTile.mineTileClicked = "temp";
         SafetyMine(mineClicked);
     }

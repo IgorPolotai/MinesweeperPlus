@@ -154,8 +154,10 @@ class CoveredTile extends Tile {
                         {
         
                         let adjacentTile = CoveredTile.coveredBoard[newRow][newCol];
-                        adjacentTile.texture = PIXI.Texture.from('images/CoveredTile.png');
-                        adjacentTile.tileData = "cover";
+                        if (adjacentTile.texture == PIXI.Texture.from('images/NightCoveredTile.png')) {
+                            adjacentTile.texture = PIXI.Texture.from('images/CoveredTile.png');
+                            adjacentTile.tileData = "cover";
+                        }
                     }
                 }
             }    
