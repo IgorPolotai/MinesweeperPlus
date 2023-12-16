@@ -22,6 +22,8 @@ class CoveredTile extends Tile {
 
         this.interactive = true;
         this.buttomMode = true;
+        this.on('mousedown', this.changeFace.bind(this));
+        this.on('mouseupoutside', this.changeFaceOutside.bind(this));
         this.on('mouseup', this.onSpriteClick.bind(this));
         this.on('rightdown', this.placeMark.bind(this));
     }
@@ -35,6 +37,14 @@ class CoveredTile extends Tile {
 
         CoveredTile.globalMode = CoveredTile.flagList[CoveredTile.currentFlag];
         console.log("Mode is now: " + CoveredTile.globalMode);
+    }
+
+    changeFace() {
+        CoveredTile.face.texture = PIXI.Texture.from('images/ScaredFace.png');
+    }
+
+    changeFaceOutside() {
+        CoveredTile.face.texture = PIXI.Texture.from('images/HappyFace.png');
     }
 
     placeMark() {
@@ -106,6 +116,7 @@ class CoveredTile extends Tile {
 
     //Removes the Covered Tile when it is clicked, but only in the Game Scene
     onSpriteClick(event) {
+        CoveredTile.face.texture = PIXI.Texture.from('images/HappyFace.png');
         if(this.parent && this.containsPoint(event.data.global)) {
                 console.log(CoveredTile.board[this.yIndex][this.xIndex]);
                 if (CoveredTile.board[this.yIndex][this.xIndex] == "e" &&
@@ -146,14 +157,14 @@ class CoveredTile extends Tile {
                 ];
             
                 for (const [rowOffset, colOffset] of directions) {
-                    const newRow = this.yIndex + rowOffset;
-                    const newCol = this.xIndex + colOffset;
+                    const newRow = this.xIndex + rowOffset;
+                    const newCol = this.yIndex + colOffset;
             
                     if (newRow >= 0 && newRow < CoveredTile.board[0].length &&
                         newCol >= 0 && newCol < CoveredTile.board.length) 
                         {
         
-                        let adjacentTile = CoveredTile.coveredBoard[newRow][newCol];
+                        let adjacentTile = CoveredTile.coveredBoard[newCol][newRow];
                         if (adjacentTile.texture == PIXI.Texture.from('images/NightCoveredTile.png')) {
                             adjacentTile.texture = PIXI.Texture.from('images/CoveredTile.png');
                             adjacentTile.tileData = "cover";
@@ -186,21 +197,21 @@ class CoveredTile extends Tile {
         CoveredTile.coveredBoard[this.yIndex][this.xIndex] = null;
     
         for (const [rowOffset, colOffset] of directions) {
-            const newRow = this.yIndex + rowOffset;
-            const newCol = this.xIndex + colOffset;
+            const newRow = this.xIndex + rowOffset;
+            const newCol = this.yIndex + colOffset;
     
             if (newRow >= 0 && newRow < CoveredTile.board[0].length &&
                 newCol >= 0 && newCol < CoveredTile.board.length) 
                 {
 
-                let adjacentTile = CoveredTile.coveredBoard[newRow][newCol];
+                let adjacentTile = CoveredTile.coveredBoard[newCol][newRow];
     
-                if (adjacentTile !== null && adjacentTile.parent !== null && CoveredTile.board[newRow][newCol] == "e") {
+                if (adjacentTile !== null && adjacentTile.parent !== null && CoveredTile.board[newCol][newRow] == "e") {
                     adjacentTile.revealAdjacent();
-                } else if (adjacentTile !== null && adjacentTile.parent !== null && CoveredTile.board[newRow][newCol] != "e" &&
-                           CoveredTile.board[newRow][newCol] != "m" && CoveredTile.board[newRow][newCol] != "d" &&
-                           CoveredTile.board[newRow][newCol] != "r" && CoveredTile.board[newRow][newCol] != "a" &&
-                           CoveredTile.board[newRow][newCol] != "k") {
+                } else if (adjacentTile !== null && adjacentTile.parent !== null && CoveredTile.board[newCol][newRow] != "e" &&
+                           CoveredTile.board[newCol][newRow] != "m" && CoveredTile.board[newCol][newRow] != "d" &&
+                           CoveredTile.board[newCol][newRow] != "r" && CoveredTile.board[newCol][newRow] != "a" &&
+                           CoveredTile.board[newCol][newRow] != "k") {
                     console.log("removing adjacent: " + (adjacentTile.parent == null));
                     
                     //Makes sure that if you remove a tile with a flag on it, you get it back
@@ -210,7 +221,7 @@ class CoveredTile extends Tile {
                     }
                     adjacentTile.parent.removeChild(adjacentTile);
                     CoveredTile.numUncovered++;
-                    CoveredTile.coveredBoard[newRow][newCol] = null;
+                    CoveredTile.coveredBoard[newCol][newRow] = null;
                 }
             }
         }

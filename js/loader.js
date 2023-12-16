@@ -63,7 +63,9 @@ WebFont.load({
                 "images/RightIntersectionTile.png",
                 "images/HappyFace.png",
                 "images/DeadFace.png",
-                "images/ShadesFace.png"
+                "images/ShadesFace.png",
+                "images/ClickedFace.png",
+                "images/ScaredFace.png"
             ]);
         app.loader.onProgress.add(e => { console.log(`progress=${e.progress}`) });
         app.loader.onComplete.add(setup);

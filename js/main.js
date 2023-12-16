@@ -36,6 +36,8 @@ let paused = true;
 let gameBoard;
 let boardWidth = 3;
 let boardHeight = 3;
+let cusBoardWidth = 3;
+let cusBoardHeight = 3;
 let mineCount = 0;
 let normalMineCount = 0;
 let doubleMineCount = 0;
@@ -44,6 +46,7 @@ let antiMineCount = 0;
 let nightMineCount = 0;
 let tileCount;
 let gameMode = "Normal";
+let lastGameMode = "Normal";
 let safetyClick = true;
 let intervalId = 0;
 
@@ -152,16 +155,35 @@ function GenerateCovers() {
     wallList.push(wall);
     gameScene.addChild(wall);
 
-    flagLabel.x = CoveredTile.coveredBoard[0][0].x + 30;
-    flagLabel.y = CoveredTile.coveredBoard[0][0].y - 81;
+    //Hides the flags count and timer if the column count is less than five
+    if (boardWidth <= 5) {
+        flagLabel.x = 10000;
+    }
+    else if (boardWidth == 6 || boardWidth == 7) {
+        flagLabel.x = CoveredTile.coveredBoard[0][0].x + 15;
+        flagLabel.y = CoveredTile.coveredBoard[0][0].y - 81;
+    }
+    else {
+        flagLabel.x = CoveredTile.coveredBoard[0][0].x + 30;
+        flagLabel.y = CoveredTile.coveredBoard[0][0].y - 81;
+    }
 
     wall = new Tile(CoveredTile.coveredBoard[0][boardWidth - 1].x + 27, CoveredTile.coveredBoard[0][boardWidth - 1].y - 81, 0, 0, "images/WallTile.png", "w");
     wall.rotation = Math.PI;
     wallList.push(wall);
     gameScene.addChild(wall);
 
-    timeLabel.x = CoveredTile.coveredBoard[0][boardWidth - 1].x - 30;
-    timeLabel.y = CoveredTile.coveredBoard[0][boardWidth - 1].y - 81;
+    if (boardWidth <= 5) {
+        timeLabel.x = 10000;
+    }
+    else if (boardWidth == 6 || boardWidth == 7) {
+        timeLabel.x = CoveredTile.coveredBoard[0][boardWidth - 1].x - 15;
+        timeLabel.y = CoveredTile.coveredBoard[0][boardWidth - 1].y - 81;
+    }
+    else {
+        timeLabel.x = CoveredTile.coveredBoard[0][boardWidth - 1].x - 30;
+        timeLabel.y = CoveredTile.coveredBoard[0][boardWidth - 1].y - 81;
+    }
 
     wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 108, 0, 0, "images/WallTile.png", "w");
     wall.rotation = Math.PI;
@@ -209,9 +231,16 @@ function GenerateCovers() {
     face.x = (wallList[0].x + wallList[1].x) / 2;
     face.y = CoveredTile.coveredBoard[0][0].y - 80;
     face.interactive = true;
+    face.on('mousedown', () => {
+        face.texture = PIXI.Texture.from('images/ClickedFace.png');
+    })
+    face.on('mouseupoutside', () => {
+        face.texture = PIXI.Texture.from('images/HappyFace.png');
+    })
     face.on('click', () => {
         startGame(boardWidth, boardHeight, mineCount);
     })
+    CoveredTile.face = face;
     wallList.push(face);
     gameScene.addChild(face);
 
@@ -504,6 +533,7 @@ function ClearBoard() {
     CoveredTile.nightMode = false;
     CoveredTile.firstClick = 0;
     CoveredTile.mineTileClicked = "temp";
+    CoveredTile.face = null;
 }
 
 function SafetyMine(mine) {
@@ -529,6 +559,9 @@ function SafetyMine(mine) {
                         [0,-1],           [0, 1],
                         [1,-1],  [1, 0],  [1, 1]];
     }
+
+    let replacementTotal = 0;
+    let nearbyAntiMine = false;
 
     //Remove old numbers
     for (const[rowOffset, colOffset] of directions) {
@@ -565,7 +598,24 @@ function SafetyMine(mine) {
                     gameBoard[newCol][newRow] = "e";
                 }
             } 
-        }
+            //Makes sure the old mine tile has the correct number
+            else if (gameBoard[newCol][newRow] == "m" ||
+                   gameBoard[newCol][newRow] == "d" ||
+                   gameBoard[newCol][newRow] == "r" ||
+                   gameBoard[newCol][newRow] == "a" ||
+                   gameBoard[newCol][newRow] == "k") {
+
+
+
+                    switch(gameBoard[newCol][newRow]) {
+                        case "m": replacementTotal++; break;
+                        case "d": replacementTotal += 2; break;
+                        case "r": replacementTotal++; break;
+                        case "a": replacementTotal--; nearbyAntiMine = true; break;
+                        case "k": replacementTotal += 0; break; //night bombs get checked later
+                    }
+            }
+        } 
     }
 
     //move mine to a new location
@@ -581,11 +631,37 @@ function SafetyMine(mine) {
                mineX = Math.floor(Math.random() * boardWidth);
                mineY = Math.floor(Math.random() * boardHeight);
         }
+
+    //Check if any Night mines would add numbers to the now empty mine tile
+    let nightDirections = [[-2,1],   [-1, 2],  [1, 2], 
+                           [2, 1],             [-2, -1],
+                           [-1,-2],   [1, -2],  [2, -1]];
+    
+    for (const[rowOffset, colOffset] of nightDirections) {
+        let newRow = mine.xIndex + rowOffset;
+        let newCol = mine.yIndex + colOffset;
+
+        if (newRow >= 0 && newRow < gameBoard[0].length &&
+            newCol >= 0 && newCol < gameBoard.length && 
+            gameBoard[newCol][newRow] == "k") {  
+                replacementTotal++;
+        }
+    }
     
     // After a valid square is selected, change it to the mine name
     // Remove old mine
+    console.log("Replacement Total: " + replacementTotal)
     gameBoard[mineY][mineX] = mine.tileData;
-    gameBoard[mine.yIndex][mine.xIndex] = "e";
+    if (nearbyAntiMine == true && replacementTotal == 0) {
+        gameBoard[mine.yIndex][mine.xIndex] = 0;
+    }
+    else if (nearbyAntiMine == false && replacementTotal == 0) {
+        gameBoard[mine.yIndex][mine.xIndex] = "e";
+    }
+    else {
+        gameBoard[mine.yIndex][mine.xIndex] = replacementTotal;
+    }
+    
     
     // Then, add +1, +2, or -1 to all eight tiles around it, except null and other mines
     for (const[rowOffset, colOffset] of directions) {
@@ -716,7 +792,8 @@ function SafetyMine(mine) {
     if (CoveredTile.nightMode == false) {
         for (let i = 0; i < coveredTileList.length; i++) {
             if(coveredTileList[i].yIndex == savedY &&
-               coveredTileList[i].xIndex == savedX) {
+               coveredTileList[i].xIndex == savedX &&
+               coveredTileList[i].tileData == "e") {
                 coveredTileList[i].revealAdjacent();
             }
         }
@@ -828,7 +905,7 @@ function createLabelsAndButtons() {
     titleLabel3.style = titleStyle;
     titleLabel3.anchor.set(0.5);
     titleLabel3.x = sceneWidth / 2;
-    titleLabel3.y = 120;
+    titleLabel3.y = sceneHeight / 2 - 327;
     customScene.addChild(titleLabel3);
 
     let titleLabel4 = new PIXI.Text("Minesweeper+");
@@ -857,7 +934,7 @@ function createLabelsAndButtons() {
     startLabel2.style = subTitleStyle;
     startLabel2.anchor.set(0.5);
     startLabel2.x = sceneWidth / 2;
-    startLabel2.y = 180;
+    startLabel2.y = sceneHeight / 2 - 268;
     customScene.addChild(startLabel2);
     
     startLabel2 = new PIXI.Text("Rules");
@@ -876,7 +953,10 @@ function createLabelsAndButtons() {
     startButton.y = sceneHeight / 2;
     startButton.interactive = true;
     startButton.buttonMode = true;
-    startButton.on("pointerup", function e() {startGame(8,8,10);}); //startGame is a function reference
+    startButton.on("pointerup", function e() {
+        if (gameMode == "Custom") {gameMode = lastGameMode}
+        startGame(8,8,10);
+    }); //startGame is a function reference
     startButton.on("pointerover", e=>e.target.alpha = 0.5);
     startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
@@ -888,7 +968,10 @@ function createLabelsAndButtons() {
     startButton.y = sceneHeight / 2 + 30;
     startButton.interactive = true;
     startButton.buttonMode = true;
-    startButton.on("pointerup", function e() {startGame(16,16,40);}); //startGame is a function reference
+    startButton.on("pointerup", function e() {
+        if (gameMode == "Custom") {gameMode = lastGameMode}
+        startGame(16,16,40);
+    }); //startGame is a function reference
     startButton.on("pointerover", e=>e.target.alpha = 0.5);
     startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
@@ -900,7 +983,10 @@ function createLabelsAndButtons() {
     startButton.y = sceneHeight / 2 + 60;
     startButton.interactive = true;
     startButton.buttonMode = true;
-    startButton.on("pointerup", function e() {startGame(30,16,99);}); //startGame is a function reference
+    startButton.on("pointerup", function e() {
+        if (gameMode == "Custom") {gameMode = lastGameMode}
+        startGame(30,16,99);
+    }); //startGame is a function reference
     startButton.on("pointerover", e=>e.target.alpha = 0.5);
     startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
@@ -958,6 +1044,7 @@ function createLabelsAndButtons() {
     varSelect.buttonMode = true;
     varSelect.on("pointerup", function e() {
         gameMode = "Normal";
+        lastGameMode = "Normal";
         variantLabel.text = "Variant: " + gameMode;
         variantSubLabel.text = "Current Variant: " + gameMode;
     });
@@ -981,6 +1068,7 @@ function createLabelsAndButtons() {
     varSelect.buttonMode = true;
     varSelect.on("pointerup", function e() {
         gameMode = "Double";
+        lastGameMode = "Double";
         variantLabel.text = "Variant: " + gameMode;
         variantSubLabel.text = "Current Variant: " + gameMode;
     });
@@ -1004,6 +1092,7 @@ function createLabelsAndButtons() {
     varSelect.buttonMode = true;
     varSelect.on("pointerup", function e() {
         gameMode = "Radioactive";
+        lastGameMode = "Radioactive";
         variantLabel.text = "Variant: " + gameMode;
         variantSubLabel.text = "Current Variant: " + gameMode;
     });
@@ -1027,6 +1116,7 @@ function createLabelsAndButtons() {
     varSelect.buttonMode = true;
     varSelect.on("pointerup", function e() {
         gameMode = "Anti";
+        lastGameMode = "Anti";
         variantLabel.text = "Variant: " + gameMode;
         variantSubLabel.text = "Current Variant: " + gameMode;
     });
@@ -1050,6 +1140,7 @@ function createLabelsAndButtons() {
     varSelect.buttonMode = true;
     varSelect.on("pointerup", function e() {
         gameMode = "Night";
+        lastGameMode = "Night";
         variantLabel.text = "Variant: " + gameMode;
         variantSubLabel.text = "Current Variant: " + gameMode;
     });
@@ -1102,14 +1193,14 @@ function createLabelsAndButtons() {
     cusSelect.interactive = true;
     cusSelect.buttonMode = true;
     cusSelect.on("pointerup", function e() {
-        boardHeight++;
-        cusHeightLabel.text = boardHeight;
+        cusBoardHeight++;
+        cusHeightLabel.text = cusBoardHeight;
     });
     cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
     cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     customScene.addChild(cusSelect);
 
-    let cusHeightLabel = new PIXI.Text(boardHeight);
+    let cusHeightLabel = new PIXI.Text(cusBoardHeight);
     cusHeightLabel.anchor.set(0.5);
     cusHeightLabel.style = numberStyle;
     cusHeightLabel.x = sceneWidth / 2 + 60;
@@ -1131,9 +1222,9 @@ function createLabelsAndButtons() {
     cusSelect.interactive = true;
     cusSelect.buttonMode = true;
     cusSelect.on("pointerup", function e() {
-        boardHeight--;
+        cusBoardHeight--;
         if(boardHeight<=3) {boardHeight = 3};
-        cusHeightLabel.text = boardHeight;
+        cusHeightLabel.text = cusBoardHeight;
     });
     cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
     cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
@@ -1148,14 +1239,14 @@ function createLabelsAndButtons() {
     cusSelect.interactive = true;
     cusSelect.buttonMode = true;
     cusSelect.on("pointerup", function e() {
-        boardWidth++;
-        cusWidthLabel.text = boardWidth;
+        cusBoardWidth++;
+        cusWidthLabel.text = cusBoardWidth;
     });
     cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
     cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     customScene.addChild(cusSelect);
 
-    let cusWidthLabel = new PIXI.Text(boardWidth);
+    let cusWidthLabel = new PIXI.Text(cusBoardWidth);
     cusWidthLabel.anchor.set(0.5);
     cusWidthLabel.style = numberStyle;
     cusWidthLabel.x = sceneWidth / 2 + 60;
@@ -1177,9 +1268,9 @@ function createLabelsAndButtons() {
     cusSelect.interactive = true;
     cusSelect.buttonMode = true;
     cusSelect.on("pointerup", function e() {
-        boardWidth--;
+        cusBoardWidth--;
         if(boardWidth<=3) {boardWidth = 3};
-        cusWidthLabel.text = boardWidth;
+        cusWidthLabel.text = cusBoardWidth;
     });
     cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
     cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
@@ -1425,7 +1516,8 @@ function createLabelsAndButtons() {
     cusSelect.buttonMode = true;
     cusSelect.on("pointerup", function e() {
         let total = normalMineCount + doubleMineCount + radioactiveMineCount + antiMineCount + nightMineCount;
-        if (total <= (boardHeight * boardWidth) - 1 && total > 0) {
+
+        if (total <= (cusBoardHeight * cusBoardWidth) - 1 && total > 0) {
             gameMode = "Custom";
             boardWidth = parseInt(cusWidthLabel.text);
             boardHeight = parseInt(cusHeightLabel.text);
