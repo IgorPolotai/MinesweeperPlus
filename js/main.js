@@ -24,8 +24,8 @@ const sceneHeight = app.view.height;
 let stage;
 
 // game variables
-let startScene,variantScene,customScene,rulesScene;
-let gameScene,scoreLabel,flagLabel,timeLabel,face,variantLabel, variantSubLabel;
+let startScene,variantScene,customScene,rulesScene,documentScene;
+let gameScene,scoreLabel,flagLabel,timeLabel,face,variantLabel,variantSubLabel,customSubLabel,rulePhoto;
 
 let explosionTextures;
 let explosions = [];
@@ -114,11 +114,11 @@ function GenerateCovers() {
     let wall = 0;
 
     //top left corner
-    wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 136, 0, 0, "images/WhiteCornerTile.png", "w");
+    wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 135, 0, 0, "images/WhiteCornerTile.png", "w");
     wallList.push(wall);
     gameScene.addChild(wall);
     //top right corner
-    wall = new Tile(CoveredTile.coveredBoard[0][boardWidth - 1].x + 27, CoveredTile.coveredBoard[0][boardWidth - 1].y - 136, 0, 0, "images/MixedCornerTile.png", "w");
+    wall = new Tile(CoveredTile.coveredBoard[0][boardWidth - 1].x + 27, CoveredTile.coveredBoard[0][boardWidth - 1].y - 135, 0, 0, "images/MixedCornerTile.png", "w");
     wall.scale.y = -1;
     wall.rotation = Math.PI / 2;
     wallList.push(wall);
@@ -202,7 +202,7 @@ function GenerateCovers() {
         wallList.push(wall);
         gameScene.addChild(wall);
 
-        wall = new Tile(CoveredTile.coveredBoard[0][i].x, CoveredTile.coveredBoard[0][i].y - 136, 0, 0, "images/WallTile.png", "w");
+        wall = new Tile(CoveredTile.coveredBoard[0][i].x, CoveredTile.coveredBoard[0][i].y - 135, 0, 0, "images/WallTile.png", "w");
         wall.rotation = -Math.PI / 2;
         wallList.push(wall);
         gameScene.addChild(wall);
@@ -411,7 +411,7 @@ function GenerateMinesAndNumbers(mines) {
                             case "d": gameBoard[newCol][newRow] += 2; break;
                             case "r": 
                                 gameBoard[newCol][newRow]++; 
-                                const savedPosition = {col:newCol, row:newRow};
+                                let savedPosition = {col:newCol, row:newRow};
                                 radioactiveArray.push(savedPosition);
                                 break;
                             case "a": gameBoard[newCol][newRow]--; break;
@@ -422,8 +422,8 @@ function GenerateMinesAndNumbers(mines) {
             }
 
             if (id == 2) {
-                console.log(radioactiveArray.length);
                 let choice = Math.floor(Math.random() * radioactiveArray.length);
+                console.log("Rad: Col: " + radioactiveArray[choice].col + ", Row: " + radioactiveArray[choice].row);
                 gameBoard[radioactiveArray[choice].col][radioactiveArray[choice].row]++;
                 savedRadioactive.push[radioactiveArray[choice]];
             }
@@ -803,7 +803,6 @@ function SafetyMine(mine) {
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && paused == false) {
         CoveredTile.toggleMode();
-        scoreLabel.text = `Press Space To Switch Flags. Current Mode: ${CoveredTile.globalMode}. Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
     }
 
     if (e.key === 'r') {
@@ -811,6 +810,7 @@ document.addEventListener('keydown', (e) => {
         variantScene.visible = false;
         customScene.visible = false;
         rulesScene.visible = false;
+        documentScene.visible = false;
         startScene.visible = true;
     }
 })
@@ -840,6 +840,10 @@ function setup() {
     rulesScene = new PIXI.Container();
     rulesScene.visible = false;
     stage.addChild(rulesScene);
+
+    documentScene = new PIXI.Container();
+    documentScene.visible = false;
+    stage.addChild(documentScene);
 	// #4 - Create labels for all scenes
 	createLabelsAndButtons();
 	// #5 - Create ship
@@ -867,6 +871,12 @@ function createLabelsAndButtons() {
     let buttonStyle = new PIXI.TextStyle({
         fill: 0x00000,
         fontSize: 36,
+        fontFamily: "Pixelify Sans"
+    });
+
+    let smallerButtonStyle = new PIXI.TextStyle({
+        fill: 0x00000,
+        fontSize: 24,
         fontFamily: "Pixelify Sans"
     });
 
@@ -915,6 +925,13 @@ function createLabelsAndButtons() {
     titleLabel4.y = 120;
     rulesScene.addChild(titleLabel4);
 
+    let titleLabel5 = new PIXI.Text("Minesweeper+");
+    titleLabel5.style = titleStyle;
+    titleLabel5.anchor.set(0.5);
+    titleLabel5.x = sceneWidth / 2;
+    titleLabel5.y = 120;
+    documentScene.addChild(titleLabel5);
+
     //make middle start label
     let startLabel2 = new PIXI.Text("Don't Blow Up");
     startLabel2.style = subTitleStyle;
@@ -943,6 +960,13 @@ function createLabelsAndButtons() {
     startLabel2.x = sceneWidth / 2;
     startLabel2.y = 180;
     rulesScene.addChild(startLabel2);
+
+    startLabel2 = new PIXI.Text("Documentation");
+    startLabel2.style = subTitleStyle;
+    startLabel2.anchor.set(0.5);
+    startLabel2.x = sceneWidth / 2;
+    startLabel2.y = 180;
+    documentScene.addChild(startLabel2);
 
     //Creates the difficulty buttons
     //Beginner (8x8, 10), Intermediate (16x16, 40), Expert (30x16, 99), Custom (you choose)
@@ -998,7 +1022,12 @@ function createLabelsAndButtons() {
     startButton.y = sceneHeight / 2 + 90;
     startButton.interactive = true;
     startButton.buttonMode = true;
-    startButton.on("pointerup", function e() {customScene.visible = true; startScene.visible = false;});
+    startButton.on("pointerup", function e() {
+        customSubLabel.text = 
+        "       Note: Timer and flag counts will only be displayed for boards that have six or more columns." + 
+        "\nRecommended max custom game size is 20 rows by 50 columns, but adjust based on browser size."
+        customScene.visible = true; 
+        startScene.visible = false;});
     startButton.on("pointerover", e=>e.target.alpha = 0.5);
     startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
@@ -1023,6 +1052,18 @@ function createLabelsAndButtons() {
     startButton.interactive = true;
     startButton.buttonMode = true;
     startButton.on("pointerup", function e() {rulesScene.visible = true; startScene.visible = false;});
+    startButton.on("pointerover", e=>e.target.alpha = 0.5);
+    startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    startScene.addChild(startButton);
+
+    startButton = new PIXI.Text("Documentation");
+    startButton.anchor.set(0.5);
+    startButton.style = smallerButtonStyle;
+    startButton.x = sceneWidth / 2;
+    startButton.y = sceneHeight / 2 + 230;
+    startButton.interactive = true;
+    startButton.buttonMode = true;
+    startButton.on("pointerup", function e() {documentScene.visible = true; startScene.visible = false;});
     startButton.on("pointerover", e=>e.target.alpha = 0.5);
     startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
@@ -1223,7 +1264,7 @@ function createLabelsAndButtons() {
     cusSelect.buttonMode = true;
     cusSelect.on("pointerup", function e() {
         cusBoardHeight--;
-        if(boardHeight<=3) {boardHeight = 3};
+        if(cusBoardHeight<=3) {cusBoardHeight = 3};
         cusHeightLabel.text = cusBoardHeight;
     });
     cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
@@ -1269,7 +1310,7 @@ function createLabelsAndButtons() {
     cusSelect.buttonMode = true;
     cusSelect.on("pointerup", function e() {
         cusBoardWidth--;
-        if(boardWidth<=3) {boardWidth = 3};
+        if(cusBoardWidth<=3) {cusBoardWidth = 3};
         cusWidthLabel.text = cusBoardWidth;
     });
     cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
@@ -1506,12 +1547,21 @@ function createLabelsAndButtons() {
     cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     customScene.addChild(cusSelect);
 
+    //Info text
+    let customSubLabel = new PIXI.Text("       Note: Timer and flag counts will only be displayed for boards that have six or more columns."+
+    "\nRecommended max custom game size is 20 rows by 50 columns, but adjust based on browser size.");
+    customSubLabel.anchor.set(0.5);
+    customSubLabel.style = varTextStyle;
+    customSubLabel.x = sceneWidth / 2;
+    customSubLabel.y = sceneHeight / 2 + 265;
+    customScene.addChild(customSubLabel);
+
     //custom start button
     cusSelect = new PIXI.Text("Start");
     cusSelect.anchor.set(0.5);
     cusSelect.style = buttonStyle;
     cusSelect.x = sceneWidth / 2;
-    cusSelect.y = sceneHeight / 2 + 270;
+    cusSelect.y = sceneHeight / 2 + 320;
     cusSelect.interactive = true;
     cusSelect.buttonMode = true;
     cusSelect.on("pointerup", function e() {
@@ -1523,6 +1573,18 @@ function createLabelsAndButtons() {
             boardHeight = parseInt(cusHeightLabel.text);
             startGame(boardWidth,boardHeight,total);
         }
+        else if (total > 0){
+            let numMinesToRemove = total - (cusBoardHeight * cusBoardWidth) + 1;
+            if (numMinesToRemove == 1) {
+                customSubLabel.text = `Too many mines. Either remove a mine, or increase the number of rows or columns.`;
+            }
+            else {
+                customSubLabel.text = `Too many mines. Either remove ${numMinesToRemove} mines, or increase the number of rows or columns.`;
+            }
+        }
+        else {
+            customSubLabel.text = `Please add at least one mine.`;
+        }
     });
     cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
     cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
@@ -1532,7 +1594,7 @@ function createLabelsAndButtons() {
     cusSelect.anchor.set(0.5);
     cusSelect.style = buttonStyle;
     cusSelect.x = sceneWidth / 2;
-    cusSelect.y = sceneHeight / 2 + 330;
+    cusSelect.y = sceneHeight / 2 + 370;
     cusSelect.interactive = true;
     cusSelect.buttonMode = true;
     cusSelect.on("pointerup", function e() {
@@ -1542,6 +1604,48 @@ function createLabelsAndButtons() {
     cusSelect.on("pointerover", e=>e.target.alpha = 0.5);
     cusSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     customScene.addChild(cusSelect);
+
+    //set up rules scene
+
+    rulePhoto = new PIXI.Sprite.from("images/placeholder.png");
+    rulePhoto.anchor.set(0.5);
+    rulePhoto.x = sceneWidth / 2;
+    rulePhoto.y = sceneHeight / 2;
+    rulesScene.addChild(rulePhoto);
+
+    let rulesSelect;
+
+    rulesSelect = new PIXI.Text("Back");
+    rulesSelect.anchor.set(0.5);
+    rulesSelect.style = buttonStyle;
+    rulesSelect.x = sceneWidth / 2;
+    rulesSelect.y = sceneHeight / 2 + 270;
+    rulesSelect.interactive = true;
+    rulesSelect.buttonMode = true;
+    rulesSelect.on("pointerup", function e() {
+        rulesScene.visible = false;
+        startScene.visible = true;
+    });
+    rulesSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    rulesSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    rulesScene.addChild(rulesSelect);
+
+    //set up documentation scene
+
+    rulesSelect = new PIXI.Text("Back");
+    rulesSelect.anchor.set(0.5);
+    rulesSelect.style = buttonStyle;
+    rulesSelect.x = sceneWidth / 2;
+    rulesSelect.y = sceneHeight / 2 + 270;
+    rulesSelect.interactive = true;
+    rulesSelect.buttonMode = true;
+    rulesSelect.on("pointerup", function e() {
+        documentScene.visible = false;
+        startScene.visible = true;
+    });
+    rulesSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    rulesSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    documentScene.addChild(rulesSelect);
 
     //set up gameScene
     let textStyle = new PIXI.TextStyle({
@@ -1561,7 +1665,7 @@ function createLabelsAndButtons() {
     scoreLabel.style = textStyle;
     scoreLabel.anchor.set(0.5);
     scoreLabel.x = sceneWidth / 2;
-    scoreLabel.y = sceneHeight - 20;
+    scoreLabel.y = sceneHeight - 60;
     gameScene.addChild(scoreLabel);
 
     //flag label
@@ -1591,13 +1695,12 @@ function startGame(width, height, mines){
     paused = false;
     flagLabel.text = CoveredTile.flagsLeft;
     timeLabel.text = "0";
-    scoreLabel.text = `Press Space To Switch Flags. Current Mode: ${CoveredTile.globalMode} Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
 }
 
 function gameLoop(){
 	if (paused) return; // keep this commented out for now
 
-    scoreLabel.text = `Press Space To Switch Flags. Current Mode: ${CoveredTile.globalMode}. Tiles Left: ${(tileCount - CoveredTile.numUncovered) - mineCount}`;
+    scoreLabel.text = `Press R To Go Back To Main Menu\nPress Space To Switch Flags.\nCurrent Flag: ${CoveredTile.globalMode}`;
     flagLabel.text = CoveredTile.flagsLeft;
 
     //Checks if you lose
@@ -1609,7 +1712,7 @@ function gameLoop(){
         coveredTileList.forEach(c=>gameScene.removeChild(c));
         coveredTileList = [];
         paused = true;
-        scoreLabel.text = `You Lose. Press R To Restart`;
+        scoreLabel.text = `Press R To Go Back To Main Menu\nPress The Smiley Face To Restart`;
         stopTimer();
     }
     else if (CoveredTile.mineTileClicked != "temp" && safetyClick == true) {
@@ -1634,7 +1737,7 @@ function gameLoop(){
     //Checks if you win
     if (CoveredTile.numUncovered >= tileCount - mineCount) {
         face.texture = PIXI.Texture.from("images/ShadesFace.png");
-        scoreLabel.text = `You Win!!! Press R To Restart`;
+        scoreLabel.text = `Press R To Go Back To Main Menu\nPress The Smiley Face To Restart`;
         victorySound.play();
         coveredTileList.forEach(c=>gameScene.removeChild(c));
         coveredTileList = [];
