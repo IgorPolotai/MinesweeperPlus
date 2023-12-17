@@ -66,7 +66,9 @@ WebFont.load({
                 "images/ShadesFace.png",
                 "images/ClickedFace.png",
                 "images/ScaredFace.png",
-                "images/placeholder.png"
+                "images/BasicRules.png",
+                "images/VariantRules.png",
+                "images/Documentation.png"
             ]);
         app.loader.onProgress.add(e => { console.log(`progress=${e.progress}`) });
         app.loader.onComplete.add(setup);

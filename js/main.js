@@ -1607,13 +1607,39 @@ function createLabelsAndButtons() {
 
     //set up rules scene
 
-    rulePhoto = new PIXI.Sprite.from("images/placeholder.png");
+    rulePhoto = new PIXI.Sprite.from("images/BasicRules.png");
     rulePhoto.anchor.set(0.5);
     rulePhoto.x = sceneWidth / 2;
     rulePhoto.y = sceneHeight / 2;
     rulesScene.addChild(rulePhoto);
 
-    let rulesSelect;
+    let rulesSelect = new PIXI.Text("Basic Rules");
+    rulesSelect.anchor.set(0.5);
+    rulesSelect.style = buttonStyle;
+    rulesSelect.x = sceneWidth / 2 - 300;
+    rulesSelect.y = sceneHeight / 2 + 270;
+    rulesSelect.interactive = true;
+    rulesSelect.buttonMode = true;
+    rulesSelect.on("pointerup", function e() {
+        rulePhoto.texture = PIXI.Texture.from('images/BasicRules.png');
+    });
+    rulesSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    rulesSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    rulesScene.addChild(rulesSelect);
+
+    rulesSelect = new PIXI.Text("Variant Rules");
+    rulesSelect.anchor.set(0.5);
+    rulesSelect.style = buttonStyle;
+    rulesSelect.x = sceneWidth / 2 + 300;
+    rulesSelect.y = sceneHeight / 2 + 270;
+    rulesSelect.interactive = true;
+    rulesSelect.buttonMode = true;
+    rulesSelect.on("pointerup", function e() {
+        rulePhoto.texture = PIXI.Texture.from('images/VariantRules.png');
+    });
+    rulesSelect.on("pointerover", e=>e.target.alpha = 0.5);
+    rulesSelect.on("pointerout", e=>e.currentTarget.alpha = 1.0);
+    rulesScene.addChild(rulesSelect);
 
     rulesSelect = new PIXI.Text("Back");
     rulesSelect.anchor.set(0.5);
@@ -1631,6 +1657,12 @@ function createLabelsAndButtons() {
     rulesScene.addChild(rulesSelect);
 
     //set up documentation scene
+
+    let docPhoto = new PIXI.Sprite.from("images/Documentation.png");
+    docPhoto.anchor.set(0.5);
+    docPhoto.x = sceneWidth / 2;
+    docPhoto.y = sceneHeight / 2;
+    documentScene.addChild(docPhoto);
 
     rulesSelect = new PIXI.Text("Back");
     rulesSelect.anchor.set(0.5);
