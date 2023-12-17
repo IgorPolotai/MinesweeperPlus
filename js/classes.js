@@ -1,3 +1,4 @@
+// The Tile class handles all of the Mine, Number, Borders, and Cover Tiles, and holds useful data
 class Tile extends PIXI.Sprite {
     constructor(x, y, xIndex, yIndex, tileImage, tileData) {
         super(app.loader.resources[tileImage].texture);
@@ -10,12 +11,19 @@ class Tile extends PIXI.Sprite {
     }
 }
 
+// The Mine Tile used to handle the checking of whether a Mine Tile was clicked, but that 
+// got absorbed by the CoveredTile, so now this class is a relic of the past that I'm too 
+// afraid to delete in case I anger the JavaScript Gods and they 404 my life. This class
+// currently does nothing special at all.
 class MineTile extends Tile {
     constructor(x, y, xIndex, yIndex, tileImage, tileData) {
         super(x, y, xIndex, yIndex, tileImage, tileData);
     }
 }
 
+// The CoveredTile class is the real brains of Minesweeper. It handles everything from
+// placing flags, checking if the mines are clicked, revealing adjacent tiles if you click
+// and empty one, and much much more.
 class CoveredTile extends Tile {
     constructor(x, y, xIndex, yIndex, tileImage, tileData) {
         super(x, y, xIndex, yIndex, tileImage, tileData);
@@ -28,6 +36,7 @@ class CoveredTile extends Tile {
         this.on('rightdown', this.placeMark.bind(this));
     }
 
+    // Changes what flag you can place when you press space
     static toggleMode() {
         CoveredTile.currentFlag++;
 
@@ -36,22 +45,27 @@ class CoveredTile extends Tile {
         }
 
         CoveredTile.globalMode = CoveredTile.flagList[CoveredTile.currentFlag];
-        console.log("Mode is now: " + CoveredTile.globalMode);
+        //console.log("Mode is now: " + CoveredTile.globalMode);
     }
 
+    // Changes the Smiley Face to shocked when you hold down the mouse on a Covered Tile
     changeFace() {
         CoveredTile.face.texture = PIXI.Texture.from('images/ScaredFace.png');
     }
 
+    // Changes the Smiley Face to happy if you hold down the mouse and release it outside of a Tile
     changeFaceOutside() {
         CoveredTile.face.texture = PIXI.Texture.from('images/HappyFace.png');
     }
 
+    // This function handles all of the flag placing. There are a total of six unique flags that can
+    // be placed: Five for each type of mine, and the Question Mark, which is available in every gamemode
+    // Flags cannot be placed on Night Tiles. 
     placeMark() {
         if(this.parent && this.tileData != "night") {
 
             switch (CoveredTile.globalMode) {
-                case "Flag":
+                case "Flag": //Flag for Normal Mines
                     if (this.texture == PIXI.Texture.from('images/FlagTile.png')) {
                         this.texture = PIXI.Texture.from('images/CoveredTile.png');
                         CoveredTile.flagsLeft++;
@@ -61,7 +75,7 @@ class CoveredTile extends Tile {
                         CoveredTile.flagsLeft--;
                     }
                 break;
-                case "Double Flag":
+                case "Double Flag": //Flags for Double Mines
                     if (this.texture == PIXI.Texture.from('images/DoubleFlagTile.png')) {
                         this.texture = PIXI.Texture.from('images/CoveredTile.png');
                         CoveredTile.flagsLeft++;
@@ -71,7 +85,7 @@ class CoveredTile extends Tile {
                         CoveredTile.flagsLeft--;
                     }
                 break;
-                case "Radioactive Flag":
+                case "Radioactive Flag": //Flags for Radioactive Mines
                     if (this.texture == PIXI.Texture.from('images/RadioactiveFlagTile.png')) {
                         this.texture = PIXI.Texture.from('images/CoveredTile.png');
                         CoveredTile.flagsLeft++;
@@ -81,7 +95,7 @@ class CoveredTile extends Tile {
                         CoveredTile.flagsLeft--;
                     }
                 break;
-                case "Anti Flag":
+                case "Anti Flag": //Flags for Anti Mines
                     if (this.texture == PIXI.Texture.from('images/NegFlagTile.png')) {
                         this.texture = PIXI.Texture.from('images/CoveredTile.png');
                         CoveredTile.flagsLeft++;
@@ -91,7 +105,7 @@ class CoveredTile extends Tile {
                         CoveredTile.flagsLeft--;
                     }
                 break;
-                case "Night Flag":
+                case "Night Flag": //Flags for Night Mines
                     if (this.texture == PIXI.Texture.from('images/NightFlagTile.png')) {
                         this.texture = PIXI.Texture.from('images/CoveredTile.png');
                         CoveredTile.flagsLeft++;
@@ -101,7 +115,7 @@ class CoveredTile extends Tile {
                         CoveredTile.flagsLeft--;
                     }
                 break;
-                case "Question":
+                case "Question": //Question tile
                     if (this.texture == PIXI.Texture.from('images/QuestionTile.png')) {
                         this.texture = PIXI.Texture.from('images/CoveredTile.png');
                     }
@@ -114,11 +128,12 @@ class CoveredTile extends Tile {
     }
     
 
-    //Removes the Covered Tile when it is clicked, but only in the Game Scene
+    // This function handles removing the Covered Tile when it is clicked. It handles checking if 
+    // you clicked on a mine. It also handles revealing surrounding tiles when you're in Night Mode
     onSpriteClick(event) {
         CoveredTile.face.texture = PIXI.Texture.from('images/HappyFace.png');
         if(this.parent && this.containsPoint(event.data.global)) {
-                console.log(CoveredTile.board[this.yIndex][this.xIndex]);
+                //console.log(CoveredTile.board[this.yIndex][this.xIndex]);
                 if (CoveredTile.board[this.yIndex][this.xIndex] == "e" &&
                     CoveredTile.nightMode == false) {
                     CoveredTile.dig.play();
@@ -136,7 +151,7 @@ class CoveredTile extends Tile {
                         CoveredTile.dig.play();
                     }
 
-                    //Makes sure that if you remove a tile with a flag on it, you get it back
+                    //Makes sure that if you remove a tile with a flag on it, the flag counter is properly incremented
                     if (this.texture != PIXI.Texture.from('images/CoveredTile.png') &&
                         this.texture != PIXI.Texture.from('images/NightCoveredTile.png')) {
                             CoveredTile.flagsLeft++;
@@ -148,7 +163,7 @@ class CoveredTile extends Tile {
 
             CoveredTile.firstClick++;
 
-            //This changes the tiles around the one clicked from night to covered
+            //If Night Mode is active, this changes the tiles around the one clicked from night to covered
             if (CoveredTile.nightMode == true) {
                 const directions = [
                     [-1, -1], [-1, 0], [-1, 1],
@@ -175,7 +190,9 @@ class CoveredTile extends Tile {
         }
     }
 
-
+    // This recursive function was by far the thing that gave me the most difficulty. It correctly will reveal all surrounding
+    // empty tiles, plus the parameter of number tiles, if you click on an empty space. I had to modify it so it wouldn't reveal
+    // mines, since Night Mines are often surrounded by empty tiles. 
     revealAdjacent() {
         if (!this.parent) {return;}
     
@@ -185,7 +202,7 @@ class CoveredTile extends Tile {
             [1, -1],  [1, 0],  [1, 1]
         ];
     
-        //Makes sure that if you remove a tile with a flag on it, you get it back
+        //Makes sure that if you remove a tile with a flag on it, the flag counter is properly incremented
         if (this.texture != PIXI.Texture.from('images/CoveredTile.png') &&
             this.texture != PIXI.Texture.from('images/NightCoveredTile.png')) {
                 CoveredTile.flagsLeft++;
@@ -196,6 +213,7 @@ class CoveredTile extends Tile {
         CoveredTile.numUncovered++;
         CoveredTile.coveredBoard[this.yIndex][this.xIndex] = null;
     
+        // This uses the algorithm I wrote for placing numbers, but instead modified to look for empty tiles
         for (const [rowOffset, colOffset] of directions) {
             const newRow = this.xIndex + rowOffset;
             const newCol = this.yIndex + colOffset;
@@ -206,15 +224,18 @@ class CoveredTile extends Tile {
 
                 let adjacentTile = CoveredTile.coveredBoard[newCol][newRow];
     
+                //If the surrounding tile is empty, call this function on that tile
                 if (adjacentTile !== null && adjacentTile.parent !== null && CoveredTile.board[newCol][newRow] == "e") {
                     adjacentTile.revealAdjacent();
+
+                //If the surrounding tile is a number, reveal it and end this recursive nightmare
                 } else if (adjacentTile !== null && adjacentTile.parent !== null && CoveredTile.board[newCol][newRow] != "e" &&
                            CoveredTile.board[newCol][newRow] != "m" && CoveredTile.board[newCol][newRow] != "d" &&
                            CoveredTile.board[newCol][newRow] != "r" && CoveredTile.board[newCol][newRow] != "a" &&
                            CoveredTile.board[newCol][newRow] != "k") {
-                    console.log("removing adjacent: " + (adjacentTile.parent == null));
+                    //console.log("removing adjacent: " + (adjacentTile.parent == null));
                     
-                    //Makes sure that if you remove a tile with a flag on it, you get it back
+                    //Makes sure that if you remove a tile with a flag on it, the flag counter is properly incremented
                     if (adjacentTile.texture != PIXI.Texture.from('images/CoveredTile.png') &&
                         adjacentTile.texture != PIXI.Texture.from('images/NightCoveredTile.png')) {
                             CoveredTile.flagsLeft++;

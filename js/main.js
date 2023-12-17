@@ -61,11 +61,11 @@ let mineList = [];
 let savedRadioactive = [];
 let wallList = [];
 
-// Disables context menu so right click can maybe work.
+// Disables context menu so right click places a flag
 document.addEventListener('contextmenu', event => event.preventDefault());
 
 // NEW FUNCTIONS
-// Creates the 2D board of tiles 
+// Creates the 2D board of tiles. Simply creates the 2D array that will store all of the data.
 function GenerateBoard(width, height) {
     ClearBoard();
     gameBoard = [];
@@ -80,13 +80,19 @@ function GenerateBoard(width, height) {
     }
 
     tileCount = boardHeight * boardWidth;
-    console.log(gameBoard);
+    //console.log(gameBoard);
 }
 
+// Creates the Cover Sprites that go on top of the number and mine sprites. These handle all of the clicking input
+// The mines and numbers have no other purpose than looks. This function also creates the borders around the game
+// board, and creates the Smiley Face button, as well as positioning the flag count and timer
 function GenerateCovers() {
     let tempData;
     let tempFile;
 
+    // If there is at least one Night Mine in play, we use the Night Tiles. When in Night Mode, you can't place flags on
+    // night tiles. You also loose the reveal adjacent functionality, meaning that every tile could be your last.
+    // This is to make Night Mines more scarier, since they can "suddenly appear", since they effect number tiles that aren't adjacent
     if (CoveredTile.nightMode == true) {
         tempData = "night";
         tempFile = "images/NightCoveredTile.png";
@@ -108,13 +114,11 @@ function GenerateCovers() {
         }
         CoveredTile.coveredBoard.push(coveredTilesData);
     }
-    console.log(CoveredTile.coveredBoard);
+    //console.log(CoveredTile.coveredBoard);
 
-    //Creates the walls
-    let wall = 0;
-
+    //Creates the border and the Smiley face button
     //top left corner
-    wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 135, 0, 0, "images/WhiteCornerTile.png", "w");
+    let wall = new Tile(CoveredTile.coveredBoard[0][0].x - 27, CoveredTile.coveredBoard[0][0].y - 135, 0, 0, "images/WhiteCornerTile.png", "w");
     wallList.push(wall);
     gameScene.addChild(wall);
     //top right corner
@@ -246,11 +250,12 @@ function GenerateCovers() {
 
 }
 
-// Adds mines to the board
-// Needs to randomly place each mine so that it's
-// 1. not where the user first clicked
-// 2. not on another mine
-// Then it needs to add 1 to all tiles, except null and other mines
+// Adds mines and numbers to the gameScene by using the custom Tile class. It first chooses what mines to place based on 
+// the gameMode. Depending on what mine types are in play, different flag options will become available. Afterwards, it
+// will place the mine randomly (making sure it isn't placed on another mine). Then, it will add the numbers to the surrounding
+// tiles (depending on what type of mine it is). Finally, using a giant switch statement, it will set the tile to the correct image.
+// Because of how many different combinations of mines there can be, this has to account from everything from a -8 (a square surrounded
+// by Anti Mines) to a 24 (a square surrounded by doubles and night mines).
 function GenerateMinesAndNumbers(mines) {
     CoveredTile.flagsLeft = mines;
     mineCount = mines;
@@ -360,11 +365,9 @@ function GenerateMinesAndNumbers(mines) {
             let mineX = Math.floor(Math.random() * boardWidth);
             let mineY = Math.floor(Math.random() * boardHeight);
             radioactiveArray = [];
-            console.log("id: " + id);
+            //console.log("id: " + id);
     
-            // This will make sure that the new mine isn't placed on an
-            // old mine
-            // TODO: Make sure that the first clicked mine also isn't selected
+            // This will make sure that the new mine isn't placed on an already existing mine
             while(gameBoard[mineY][mineX] == "m" ||
                   gameBoard[mineY][mineX] == "d" ||
                   gameBoard[mineY][mineX] == "r" ||
@@ -421,6 +424,10 @@ function GenerateMinesAndNumbers(mines) {
                 }
             }
 
+            //This is for radioactive mines, increase one of their adjacent tiles by one. It chooses a random tile
+            //and increments it. It is then saved to savedRadioactive just in case a radioactive mine is clicked first,
+            //and it has to be moved due to the Safety Mine function, which ensures that you never click a mine on your
+            //first click.
             if (id == 2) {
                 let choice = Math.floor(Math.random() * radioactiveArray.length);
                 console.log("Rad: Col: " + radioactiveArray[choice].col + ", Row: " + radioactiveArray[choice].row);
@@ -502,9 +509,11 @@ function GenerateMinesAndNumbers(mines) {
     }
 
     CoveredTile.board = gameBoard;
-    console.log(gameBoard);
+    //console.log(gameBoard);
 }
 
+// This resets the board by deleting all of the tiles, and reseting all of the many static variables 
+// that CoveredTile uses
 function ClearBoard() {
     coveredTileList.forEach(c=>gameScene.removeChild(c));
     coveredTileList = [];
@@ -536,8 +545,13 @@ function ClearBoard() {
     CoveredTile.face = null;
 }
 
+// This function ensures that if you click a mine on your first click, the mine is moved to a different location. It first determines
+// what type of mine it is, then removes the old numbers. It then moves the mine to a new location, adds any correct numbers to the now
+// empty mine spot, generates new numbers based on where the mine was placed, and then basically regenerates the entire board.
+// Is this the most efficient way of doing this? No. But this took a lot of tinkering, and was mainly a byproduct of me using two
+// sets of overlapping sprites (Num/Mine tiles, and Cover tiles)
 function SafetyMine(mine) {
-    console.log("safety mine activated");
+    //console.log("safety mine activated");
     safetyClick = false;
 
     //logic
@@ -800,6 +814,7 @@ function SafetyMine(mine) {
     }
 }
 
+// This adds the event listeners for space bar to switch flags and r to send you back to the main menu
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && paused == false) {
         CoveredTile.toggleMode();
@@ -817,6 +832,7 @@ document.addEventListener('keydown', (e) => {
 
 // OLD FUNCTIONS THAT HAVE BEEN MODIFIED
 
+// This sets up all of the scenes, labels, sound effects, and the explosion spritesheet that I reused from Circle Blast
 function setup() {
 	stage = app.stage;
 	// #1 - Create the `start` scene
@@ -846,27 +862,21 @@ function setup() {
     stage.addChild(documentScene);
 	// #4 - Create labels for all scenes
 	createLabelsAndButtons();
-	// #5 - Create ship
-
-	// #6 - Load Sounds
+	// #5 - Load Sounds
     digSound = new Howl({src: ['sounds/dig.mp3']});
     boomSound = new Howl({src: ['sounds/boom.mp3']});
     victorySound = new Howl({src: ['sounds/victoryCut.mp3']});
     CoveredTile.dig = digSound;
-	//shootSound = new Howl({src: ['sounds/shoot.wav']});
-    //hitSound = new Howl({src: ['sounds/hit.mp3']});
-
-	// #7 - Load sprite sheet
+	// #6 - Load sprite sheet
     explosionTextures = loadSpriteSheet();
-	// #8 - Start update loop
+	// #7 - Start update loop
 	app.ticker.add(gameLoop);
-	// #9 - Start listening for click events on the canvas
-	//app.view.onclick = fireBullet;
-
-	// Now our `startScene` is visible
-	// Clicking the button calls startGame()
 }
 
+// This function creates all of the many, many labels used for the game. I was mainly focused on making them all work,
+// so the reason why this function is about 1000 lines of code long (oops) is because I just did a lot of copy pasting. 
+// If I had more time to go back and create functions to handle the very similar buttons that I make, I would. But that's
+// a later me problem.
 function createLabelsAndButtons() {
     let buttonStyle = new PIXI.TextStyle({
         fill: 0x00000,
@@ -995,7 +1005,7 @@ function createLabelsAndButtons() {
     startButton.on("pointerup", function e() {
         if (gameMode == "Custom") {gameMode = lastGameMode}
         startGame(16,16,40);
-    }); //startGame is a function reference
+    }); 
     startButton.on("pointerover", e=>e.target.alpha = 0.5);
     startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
@@ -1010,7 +1020,7 @@ function createLabelsAndButtons() {
     startButton.on("pointerup", function e() {
         if (gameMode == "Custom") {gameMode = lastGameMode}
         startGame(30,16,99);
-    }); //startGame is a function reference
+    }); 
     startButton.on("pointerover", e=>e.target.alpha = 0.5);
     startButton.on("pointerout", e=>e.currentTarget.alpha = 1.0);
     startScene.addChild(startButton);
@@ -1069,7 +1079,6 @@ function createLabelsAndButtons() {
     startScene.addChild(startButton);
 
     //set up variantScene
-
     let varTextStyle = new PIXI.TextStyle({
         fill: 0x00000,
         fontSize: 24,
@@ -1717,6 +1726,9 @@ function createLabelsAndButtons() {
     gameScene.addChild(timeLabel);
 }
 
+// This function sets up the game by calling the three main Generating functions. Originally the Board and Cover functions
+// where combined, but I had to take the CoverTile part of the GenerateBoard function out of it, to ensure that the Cover Tiles
+// are generated after the Number and Mine tiles, so that they would be on top.
 function startGame(width, height, mines){
     GenerateBoard(width,height);
     GenerateMinesAndNumbers(mines);
@@ -1729,8 +1741,10 @@ function startGame(width, height, mines){
     timeLabel.text = "0";
 }
 
+// This function runs while you're playing the game, and checks whether you have won or lost. It also calls SafetyMine if
+// you click a mine on your first click
 function gameLoop(){
-	if (paused) return; // keep this commented out for now
+	if (paused) return; 
 
     scoreLabel.text = `Press R To Go Back To Main Menu\nPress Space To Switch Flags.\nCurrent Flag: ${CoveredTile.globalMode}`;
     flagLabel.text = CoveredTile.flagsLeft;
@@ -1746,7 +1760,7 @@ function gameLoop(){
         paused = true;
         scoreLabel.text = `Press R To Go Back To Main Menu\nPress The Smiley Face To Restart`;
         stopTimer();
-    }
+    } //Checks if this is your first click and you clicked a mine
     else if (CoveredTile.mineTileClicked != "temp" && safetyClick == true) {
         let mineClicked = null;
         for (let i = 0; i < mineList.length; i++) {
@@ -1760,7 +1774,7 @@ function gameLoop(){
         SafetyMine(mineClicked);
     }
     
-
+    //This checks if you have clicked at least once. When you did, it disables safety click and starts timer
     if (CoveredTile.firstClick >= 1 && safetyClick == true) {
         safetyClick = false;
         timer();
@@ -1779,6 +1793,7 @@ function gameLoop(){
 	
 }
 
+// Simple timer used for counting up
 function timer() {
     let sec = 0;
     intervalId = setInterval(function() {
@@ -1792,13 +1807,16 @@ function timer() {
     }, 1000);
 }
 
+// Stops the above timer
 function stopTimer() {
     clearInterval(intervalId);
 }
 
+// The loadSpriteSheet and createExplosions are the only unmodified functions still left over from Circle Blast.
+// If it ain't broke, don't fix it.
 function loadSpriteSheet() {
     // the 16 animation frames in each row are 64 x 64 pixels
-    // we are using the secoond row
+    // we are using the second row
 
     let spriteSheet = PIXI.BaseTexture.from("images/explosions.png");
     let width = 64;
@@ -1813,6 +1831,7 @@ function loadSpriteSheet() {
     return textures;
 }
 
+// Creates an explosion when you click a mine
 function createExplosion(x, y, frameWidth, frameHeight) {
     // the animation frames are 64 x 64 pixels
     let w2 = frameWidth / 2;

@@ -3,7 +3,7 @@ WebFont.load({
         families: ['Pixelify Sans']
     },
     active: e => {
-        console.log("font loaded!");
+        //console.log("font loaded!");
         // pre-load the images
         app.loader.
             add([
@@ -70,7 +70,7 @@ WebFont.load({
                 "images/VariantRules.png",
                 "images/Documentation.png"
             ]);
-        app.loader.onProgress.add(e => { console.log(`progress=${e.progress}`) });
+        //app.loader.onProgress.add(e => { console.log(`progress=${e.progress}`) });
         app.loader.onComplete.add(setup);
         app.loader.load();
     }
